@@ -1,12 +1,28 @@
 import { useEffect, useState } from 'react';
-import Frame from '../components/frame'
+import Frame from './frame'
 import { ChevronLeft, ChevronRight, CopyPlus, Download, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
+import { frame } from '../models'
+
+
+interface FramesProps {
+    frames: frame[] | []
+    setFrames: Function
+    currentFrameIdx: number
+    setCurrentFrameIdx: Function
+    canvasSize: { width: number, height: number }
+    background: string
+    clearCanvas: Function
+    generateId: Function
+    loadImage: Function
+    isPlay: Boolean
+    toggleAnimation: Function
+    download: Function
+    showBar: string
+}
 
 export default function Frames({
     frames,
     setFrames,
-    images,
-    setImages,
     currentFrameIdx,
     setCurrentFrameIdx,
     canvasSize,
@@ -18,7 +34,7 @@ export default function Frames({
     toggleAnimation,
     download,
     showBar
-}) {
+}: FramesProps) {
 
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
@@ -29,11 +45,11 @@ export default function Frames({
     const addFrame = () => {
         const newFrame = { id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }
         frames.splice(currentFrameIdx + 1, 0, newFrame)
-        setFrames(prev => [...prev])
+        setFrames((prev:frame[]) => [...prev])
         setCurrentFrameIdx(currentFrameIdx + 1)
     }
 
-    const switchFrame = (toFrame) => {
+    const switchFrame = (toFrame:string) => {
         let newCurrentFrameIdx
 
         if (toFrame === 'left') {
@@ -55,7 +71,7 @@ export default function Frames({
             clearAll()
         } else {
             frames.splice(currentFrameIdx, 1)
-            setFrames(prev => [...prev])
+            setFrames((prev:frame[]) => [...prev])
             setCurrentFrameIdx(currentFrameIdx > 0 ? currentFrameIdx - 1 : 0)
         }
     }
@@ -63,7 +79,7 @@ export default function Frames({
     const duplicateFrame = () => {
         const newFrame = { id: generateId(), layers: frames[currentFrameIdx].layers }
         frames.splice(currentFrameIdx, 0, newFrame)
-        setFrames(prev => [...prev])
+        setFrames((prev:frame[]) => [...prev])
         switchFrame('right')
     }
 
@@ -92,10 +108,10 @@ export default function Frames({
                     <Trash className='w-5 h-5' />
                 </div>
                 <div id='animation-options' className='ml-6 flex gap-6 items-center justify-center'>
-                    <div title="Play / Pause" className={framesButtonClass} onClick={toggleAnimation}>
+                    <div title="Play / Pause" className={framesButtonClass} onClick={()=>toggleAnimation}>
                         {isPlay ? <Pause /> : <Play />}
                     </div>
-                    <div title="Download" className={framesButtonClass} onClick={download}>
+                    <div title="Download" className={framesButtonClass} onClick={()=>download}>
                         <Download />
                     </div>
                     {/* <div title="Save" className={framesButtonClass}>
@@ -120,8 +136,6 @@ export default function Frames({
                                 switchFrame={switchFrame}
                                 background={background}
                                 loadImage={loadImage}
-                                images={images}
-                                setImages={setImages}
                             />)}
                 </div>
                 <div className="hidden md:flex w-8 py-4 mt-2 bg-slate-950 rounded-lg self-start justify-center" onClick={() => switchFrame('right')}><ChevronRight className="w-10 h-10 text-white cursor-pointer" /></div>

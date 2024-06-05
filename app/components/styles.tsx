@@ -2,8 +2,8 @@ import { useEffect, useState } from "react"
 import { HexColorPicker } from "react-colorful" 
 
 export default function Styles({
-    styleBox,
-    setStyleBox,
+    styleBar,
+    setStyleBar,
     styles,
     setStyles
 }) {

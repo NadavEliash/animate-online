@@ -10,20 +10,20 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    --foreground-rgb: 5, 9, 37, 10;
+    --background-start-rgb: 0, 30, 90, 10;
+    --background-end-rgb: 6, 5, 12, 10;
   }
 }
 
 body {
+  max-height: 100%;
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: radial-gradient(circle at center,
+      rgb(var(--background-end-rgb)) 10%,
+      rgb(var(--background-start-rgb))
+    );
+    background-attachment: fixed;
 }
 
 @layer utilities {

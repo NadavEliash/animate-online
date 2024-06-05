@@ -2,8 +2,21 @@ import Layer from './layer'
 import { Dongle } from 'next/font/google'
 import { CopyPlus, Minus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { layer } from '../models'
 
 const dongle = Dongle({ weight: ["700"], subsets: ["latin"] })
+
+interface LayersProps {
+    layers: layer[]
+    setLayers: Function
+    currentLayerIdx: number
+    setCurrentLayerIdx: Function
+    canvasSyze: { width: number, height: number }
+    generateId: Function
+    background: string
+    loadImage: Function
+    showBar: string
+}
 
 export default function Layers({
     layers,
@@ -15,7 +28,7 @@ export default function Layers({
     background,
     loadImage,
     showBar
-}) {
+}: LayersProps) {
 
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
@@ -41,21 +54,21 @@ export default function Layers({
     const removeLayer = () => {
         if (currentLayerIdx === 1 && layers.length === 2) {
             layers.splice(currentLayerIdx, 1, { id: generateId(), drawingActions: [] })
-            setLayers(prev => [...prev])
+            setLayers(...layers)
         } else {
             layers.splice(currentLayerIdx, 1)
-            setLayers(prev => [...prev])
+            setLayers(...layers)
         }
-        setCurrentLayerIdx(prev => prev > 1 ? prev - 1 : 1)
+        setCurrentLayerIdx((prev: number) => prev > 1 ? prev - 1 : 1)
     }
 
     const buttonsClass = "md:bg-white/20 p-1 lg:p-2 rounded-md cursor-pointer hover:scale-110 transition-transform w-6 h-6 lg:w-8 lg:h-8"
 
     return (
-        <div className={`absolute ${mobileDisplay?'right-0':'-right-[100px]'} transition-all duration-700 top-20 bg-gray-300/60 rounded-l-2xl flex flex-col gap-2 justify-between overflow-y-auto max-h-[550px]
+        <div className={`absolute ${mobileDisplay ? 'right-0' : '-right-[100px]'} transition-all duration-700 top-20 bg-gray-300/60 rounded-l-2xl flex flex-col gap-2 justify-between max-h-[550px]
         md:static md:p-1 md:py-2 lg:p-4 md:bg-white/20 md:rounded-2xl`}>
             <h1 className={`text-center text-xl text-black md:text-3xl md:text-slate-200 ${dongle.className}`}>Layers:</h1>
-            <div className="flex-1 flex flex-col-reverse items-center overflow-auto">
+            <div className="flex-1 flex flex-col-reverse items-center overflow-y-auto overflow-x-hidden">
                 {layers && layers.map((layer, idx) =>
                     <Layer
                         key={idx}

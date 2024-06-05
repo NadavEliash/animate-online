@@ -1,9 +1,16 @@
+interface BackgroundProps {
+    bgBar: boolean
+    setBgBar: Function
+    background: string
+    setBackground: Function
+}
+
 export default function Backgrounds({
-    bgBox,
-    setBgBox,
+    bgBar,
+    setBgBar,
     background,
     setBackground
-}) {
+}: BackgroundProps) {
 
     return (
         <>

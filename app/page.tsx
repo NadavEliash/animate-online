@@ -8,6 +8,7 @@ import Frames from "./components/frames"
 import OnionSkin from "./components/onion-skin"
 import Styles from "./components/styles"
 import Backgrounds from "./components/backgrounds"
+import { action, drawingAction, frame, layer } from "./models"
 
 import { Sue_Ellen_Francisco } from 'next/font/google'
 
@@ -31,22 +32,22 @@ const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 export default function Home() {
 
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 })
-    const [action, setAction] = useState({ isDraw: true })
-    const [layers, setLayers] = useState([])
+    const [action, setAction] = useState<action>({ isDraw: true })
+    const [layers, setLayers] = useState<layer[] | []>([])
     const [currentLayerIdx, setCurrentLayerIdx] = useState(1)
-    const [frames, setFrames] = useState([])
+    const [frames, setFrames] = useState<frame[] | []>([])
     const [currentFrameIdx, setCurrentFrameIdx] = useState(0)
     const [actionHistory, setActionHistory] = useState([])
-    const [undoHistory, setUndoHistory] = useState([])
-    const [onionSkin, setOnionSkin] = useState([])
+    const [undoHistory, setUndoHistory] = useState<drawingAction[] | []>([])
+    const [onionSkin, setOnionSkin] = useState<[frame] | []>([])
     const [clear, setClear] = useState(false)
     const [isPlay, setIsPlay] = useState(false)
     const [isDownload, setIsDownload] = useState(false)
 
     const [showBar, setShowBar] = useState('')
 
-    const [styleBox, setStyleBox] = useState(false)
-    const [bgBox, setBgBox] = useState(false)
+    const [styleBar, setStyleBar] = useState(false)
+    const [bgBar, setBgBar] = useState(false)
 
     const [styles, setStyles] = useState({
         lineWidth: 6,
@@ -123,22 +124,13 @@ export default function Home() {
         setClear(!clear)
     }
 
-    const onUserAction = (time) => {
-        const newAction = { time, frames, currentFrameIdx, layers, currentLayerIdx }
-        if (actionHistory.length) {
-            if (time - actionHistory[0].time > 200) {
-                setActionHistory(prev => [newAction, ...prev])
-            }
-        } else {
-            setActionHistory(prev => [newAction, ...prev])
-        }
-    }
-
     const undo = () => {
         const actions = layers[currentLayerIdx].drawingActions
         if (actions.length) {
             const cancelled = actions.shift()
-            undoHistory.unshift(cancelled)
+            if (cancelled) {
+              setUndoHistory(prev=>[cancelled, ...prev])
+            }
 
             const newLayer = layers[currentLayerIdx]
             newLayer.drawingActions = actions
@@ -149,11 +141,11 @@ export default function Home() {
     }
 
     const redo = () => {
-        if (undoHistory.length) {
-            const lastAction = undoHistory.shift()
+        if (undoHistory!.length) {
+            const lastAction = undoHistory!.shift()
 
             const newLayer = layers[currentLayerIdx]
-            newLayer.drawingActions = [lastAction, ...newLayer.drawingActions]
+            newLayer.drawingActions = [lastAction!, ...newLayer.drawingActions]
             const newLayers = layers
             newLayers.splice(currentLayerIdx, 1, newLayer)
             setLayers(prev => [...newLayers])
@@ -166,7 +158,7 @@ export default function Home() {
         return Math.floor(Math.random() * 99999) + ''
     }
 
-    const loadImage = (url) => {
+    const loadImage = (url:string) => {
         return new Promise((resolve, reject) => {
             const image = new Image()
             image.onload = () => resolve(image)
@@ -187,7 +179,7 @@ export default function Home() {
 
     // STYLE CLASSES AND EXPERIENCE FUNCTIONALITY
 
-    const handleBars = (bar) => {
+    const handleBars = (bar:string) => {
         setTimeout(() => {
             showBar === bar
                 ? setShowBar('')
@@ -203,7 +195,7 @@ export default function Home() {
             <div className="h-svh bg-white md:bg-transparent">
                 <div className="w-full h-16"></div>
                 <h1 className={`hidden md:block md:mb-2 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
-                <h2 className="text-center text-lg mb-2">{'Animation app, based on HTML Canvas and React'}</h2>
+                <h2 className="text-center text-lg mb-2">Animation app, based on HTML Canvas and React</h2>
                 <div id="drawing-bar" className="flex flex-row justify-center md:gap-1 lg:gap-2">
                     <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
                     <div id="action-buttons"
@@ -215,22 +207,22 @@ export default function Home() {
                         <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
                             <Eraser />
                         </div>
-                        {styleBox && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setStyleBox(false)}></div>}
-                        <div id="styleBox" className={`${actionButtonClass} relative`} onClick={() => setStyleBox(true)}>
+                        {styleBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setStyleBar(false)}></div>}
+                        <div id="styleBar" className={`${actionButtonClass} relative`} onClick={() => setStyleBar(true)}>
                             <Palette />
-                            {styleBox && <Styles
-                                styleBox={styleBox}
-                                setStyleBox={setStyleBox}
+                            {styleBar && <Styles
+                                styleBar={styleBar}
+                                setStyleBar={setStyleBar}
                                 styles={styles}
                                 setStyles={setStyles}
                             />}
                         </div>
-                        {bgBox && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setBgBox(false)}></div>}
-                        <div id="bgBox" className="rounded-sm w-6 h-6 bg-white relative cursor-pointer text-black text-sm text-center pt-[2px]" onClick={() => setBgBox(true)}>BG
-                            {bgBox &&
+                        {bgBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setBgBar(false)}></div>}
+                        <div id="bgBar" className="rounded-sm w-6 h-6 bg-white relative cursor-pointer text-black text-sm text-center pt-[2px]" onClick={() => setBgBar(true)}>BG
+                            {bgBar &&
                                 <Backgrounds
-                                    bgBox={bgBox}
-                                    setBgBox={setBgBox}
+                                    bgBar={bgBar}
+                                    setBgBar={setBgBar}
                                     background={background}
                                     setBackground={setBackground}
                                 />}
