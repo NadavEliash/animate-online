@@ -1,8 +1,8 @@
-import Layer from './layer'
 import { Dongle } from 'next/font/google'
 import { CopyPlus, Minus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { layer } from '../models'
+import DisplayCanvas from './display-canvas'
 
 const dongle = Dongle({ weight: ["700"], subsets: ["latin"] })
 
@@ -70,17 +70,18 @@ export default function Layers({
             <h1 className={`text-center text-xl text-black md:text-3xl md:text-slate-200 ${dongle.className}`}>Layers:</h1>
             <div className="flex-1 flex flex-col-reverse items-center overflow-y-auto overflow-x-hidden">
                 {layers && layers.map((layer, idx) =>
-                    <Layer
-                        key={idx}
-                        layer={layer}
-                        idx={idx}
-                        layers={layers}
-                        setLayers={setLayers}
-                        currentLayerIdx={currentLayerIdx}
-                        setCurrentLayerIdx={setCurrentLayerIdx}
-                        canvasSize={canvasSyze}
-                        background={background}
-                        loadImage={loadImage}
+                    <DisplayCanvas 
+                    key={idx}
+                    size={"w-28 h-20"}
+                    layer={layer}
+                    idx={idx}
+                    layers={layers}
+                    setLayers={setLayers}
+                    currentIdx={currentLayerIdx}
+                    setCurrentIdx={setCurrentLayerIdx}
+                    canvasSize={canvasSyze}
+                    background={background}
+                    loadImage={loadImage}
                     />
                 )}
             </div>

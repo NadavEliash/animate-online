@@ -11,6 +11,7 @@ export interface layer {
 export interface frame {
     id: string
     layers: layer[]
+    imageData?: ImageData
 }
 
 export interface action {
@@ -24,4 +25,9 @@ export interface action {
 export interface path {
     x: number
     y: number
+}
+
+export interface styles {
+    lineWidth: number
+    strokeStyle: string
 }

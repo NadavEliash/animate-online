@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import Frame from './frame'
 import { ChevronLeft, ChevronRight, CopyPlus, Download, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
 import { frame } from '../models'
+import DisplayCanvas from './display-canvas';
 
 
 interface FramesProps {
@@ -15,8 +15,9 @@ interface FramesProps {
     generateId: Function
     loadImage: Function
     isPlay: Boolean
-    toggleAnimation: Function
-    download: Function
+    setIsPlay: Function
+    isDownload: Boolean
+    setIsDownload: Function
     showBar: string
 }
 
@@ -31,8 +32,9 @@ export default function Frames({
     generateId,
     loadImage,
     isPlay,
-    toggleAnimation,
-    download,
+    setIsPlay,
+    isDownload,
+    setIsDownload,
     showBar
 }: FramesProps) {
 
@@ -45,11 +47,11 @@ export default function Frames({
     const addFrame = () => {
         const newFrame = { id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }
         frames.splice(currentFrameIdx + 1, 0, newFrame)
-        setFrames((prev:frame[]) => [...prev])
+        setFrames((prev: frame[]) => [...prev])
         setCurrentFrameIdx(currentFrameIdx + 1)
     }
 
-    const switchFrame = (toFrame:string) => {
+    const switchFrame = (toFrame: string | number) => {
         let newCurrentFrameIdx
 
         if (toFrame === 'left') {
@@ -61,6 +63,7 @@ export default function Frames({
         } else {
             newCurrentFrameIdx = toFrame
         }
+
         setCurrentFrameIdx(newCurrentFrameIdx)
     }
 
@@ -71,7 +74,7 @@ export default function Frames({
             clearAll()
         } else {
             frames.splice(currentFrameIdx, 1)
-            setFrames((prev:frame[]) => [...prev])
+            setFrames((prev: frame[]) => [...prev])
             setCurrentFrameIdx(currentFrameIdx > 0 ? currentFrameIdx - 1 : 0)
         }
     }
@@ -79,7 +82,7 @@ export default function Frames({
     const duplicateFrame = () => {
         const newFrame = { id: generateId(), layers: frames[currentFrameIdx].layers }
         frames.splice(currentFrameIdx, 0, newFrame)
-        setFrames((prev:frame[]) => [...prev])
+        setFrames((prev: frame[]) => [...prev])
         switchFrame('right')
     }
 
@@ -108,10 +111,10 @@ export default function Frames({
                     <Trash className='w-5 h-5' />
                 </div>
                 <div id='animation-options' className='ml-6 flex gap-6 items-center justify-center'>
-                    <div title="Play / Pause" className={framesButtonClass} onClick={()=>toggleAnimation}>
+                    <div title="Play / Pause" className={framesButtonClass} onClick={() => setIsPlay(!isPlay)}>
                         {isPlay ? <Pause /> : <Play />}
                     </div>
-                    <div title="Download" className={framesButtonClass} onClick={()=>download}>
+                    <div title="Download" className={framesButtonClass} onClick={() => setIsDownload(true)}>
                         <Download />
                     </div>
                     {/* <div title="Save" className={framesButtonClass}>
@@ -126,17 +129,19 @@ export default function Frames({
                 <div id="frames" className="flex-1 gap-2 md:gap-4 flex overflow-x-auto justify-start p-2">
                     {frames.length &&
                         frames.map((frame, idx) =>
-                            <Frame key={idx}
+                            <DisplayCanvas key={idx}
+                                size={"w-36 h-24"}
                                 frames={frames}
                                 setFrames={setFrames}
                                 frame={frame}
                                 idx={idx}
-                                currentFrameIdx={currentFrameIdx}
+                                currentIdx={currentFrameIdx}
                                 canvasSize={canvasSize}
-                                switchFrame={switchFrame}
+                                setCurrentIdx={setCurrentFrameIdx}
                                 background={background}
                                 loadImage={loadImage}
-                            />)}
+                            />
+                        )}
                 </div>
                 <div className="hidden md:flex w-8 py-4 mt-2 bg-slate-950 rounded-lg self-start justify-center" onClick={() => switchFrame('right')}><ChevronRight className="w-10 h-10 text-white cursor-pointer" /></div>
             </div>

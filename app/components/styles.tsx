@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react"
-import { HexColorPicker } from "react-colorful" 
+import { HexColorPicker } from "react-colorful"
+import { styles } from "../models"
+
+interface StyleProps {
+    styleBar: boolean
+    setStyleBar: Function
+    styles: styles
+    setStyles: Function
+}
 
 export default function Styles({
     styleBar,
     setStyleBar,
     styles,
     setStyles
-}) {
+}: StyleProps) {
 
-    const [lineWidth, setLineWidth] = useState(6)
+    const [lineWidth, setLineWidth] = useState<number>(6)
     const [strokeStyle, setStrokeStyle] = useState("black")
     const [dotSize, setDotSize] = useState(3)
     const [color, setColor] = useState("#aabbcc")
@@ -19,7 +27,7 @@ export default function Styles({
             strokeStyle
         })
     }, [(lineWidth), (strokeStyle)])
-    
+
     useEffect(() => {
         const newDotSize = lineWidth > 22 ? 6
             : lineWidth > 14 ? 4
@@ -40,7 +48,7 @@ export default function Styles({
                         <div className={`bg-[${strokeStyle}] border-2 rounded-full h-${dotSize} w-${dotSize}`}></div>
                     </div>
                     <input className="transition-opacity" type="range" min={1} max={30} step={1} value={lineWidth}
-                        onChange={(e) => setLineWidth(e.target.value)} />
+                        onChange={(e) => setLineWidth(+e.target.value)} />
                 </div>
             </div>
         </>

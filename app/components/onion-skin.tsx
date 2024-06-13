@@ -1,13 +1,22 @@
 import { useEffect, useRef, useState } from "react"
+import { drawingAction, frame, layer } from "../models"
+
+interface OnionSkinProps {
+    onionSkin: frame[]
+    currentFrameIdx: number
+    canvasSize: { width: number, height: number }
+    loadImage: Function
+}
 
 export default function OnionSkin({
     onionSkin,
     currentFrameIdx,
     canvasSize,
     loadImage,
-}) {
-    const canvasRef = useRef()
-    const [context, setContext] = useState(null)
+}: OnionSkinProps) {
+
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
 
     useEffect(() => {
         if (canvasRef.current) {
@@ -21,29 +30,30 @@ export default function OnionSkin({
 
     useEffect(() => {
         if (canvasRef.current) {
-            const newContext = canvasRef.current.getContext('2d')
-            newContext.clearRect(0, 0, canvasSize.width, canvasSize.height)
-            if (onionSkin[0].layers && onionSkin[0].layers.length) {
-                drawFrmae(newContext, onionSkin[0].layers)
+            const ctx = canvasRef.current.getContext('2d')
+            if (ctx) {
+                ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
+                if (onionSkin[0].layers && onionSkin[0].layers.length) {
+                    drawFrmae(ctx, onionSkin[0].layers)
+                }
             }
         }
     }, [onionSkin])
 
     useEffect(() => {
         if (currentFrameIdx === 0) {
-            const newContext = canvasRef.current.getContext('2d')
-            newContext.clearRect(0, 0, canvasSize.width, canvasSize.height)
+            const ctx = canvasRef.current?.getContext('2d')
+            if (ctx) ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
         }
     }, [currentFrameIdx])
 
-    const drawFrmae = async (ctx, layers) => {
-        const newContext = canvasRef.current.getContext('2d')
+    const drawFrmae = async (ctx: CanvasRenderingContext2D, layers: layer[]) => {
         for (let i = 1; i < layers.length; i++) {
-            drawLayer(newContext, layers[i].drawingActions)
+            drawLayer(ctx, layers[i].drawingActions)
         }
     }
 
-    const drawLayer = async (ctx, actions) => {
+    const drawLayer = async (ctx: CanvasRenderingContext2D, actions: drawingAction[]) => {
         for (const action of actions) {
             try {
                 const image = await loadImage(action.url)
@@ -60,6 +70,6 @@ export default function OnionSkin({
     return (
         <canvas
             ref={canvasRef}
-            className='absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[100%] md:w-fit rounded-md pointer-events-none z-10 opacity-20'
+            className='absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[100%] md:w-fit rounded-md pointer-events-none z-10 opacity-25'
         />)
 }

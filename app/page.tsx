@@ -192,10 +192,9 @@ export default function Home() {
 
     return (
         <>
-            <div className="h-svh bg-white md:bg-transparent">
+            <main className="h-svh bg-white md:bg-transparent">
                 <div className="w-full h-16"></div>
-                <h1 className={`hidden md:block md:mb-2 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
-                <h2 className="text-center text-lg mb-2">Animation app, based on HTML Canvas and React</h2>
+                <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
                 <div id="drawing-bar" className="flex flex-row justify-center md:gap-1 lg:gap-2">
                     <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
                     <div id="action-buttons"
@@ -308,13 +307,14 @@ export default function Home() {
                     clearCanvas={clearCanvas}
                     generateId={generateId}
                     loadImage={loadImage}
-                    toggleAnimation={toggleAnimation}
                     isPlay={isPlay}
-                    download={download}
+                    setIsPlay={setIsPlay}
+                    isDownload={isDownload}
+                    setIsDownload={setIsDownload}
                     showBar={showBar}
                 ></Frames>
                 <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
-            </div>
+            </main>
         </>
     )
 }

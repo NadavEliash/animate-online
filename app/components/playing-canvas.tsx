@@ -1,4 +1,15 @@
 import { useEffect, useRef, useState } from "react"
+import { frame } from "../models"
+
+interface PlayingCanvasProps {
+    isPlay: boolean
+    isDownload: boolean
+    setIsDownload: Function
+    frames: frame[]
+    canvasSize: { width: number, height: number }
+    background: string
+    loadImage: Function
+}
 
 export default function PlayingCanvas({
     isPlay,
@@ -8,12 +19,13 @@ export default function PlayingCanvas({
     canvasSize,
     background,
     loadImage
-}) {
-    const canvasRef = useRef(null)
-    const [context, setContext] = useState(null)
+}: PlayingCanvasProps) {
+    
+    const canvasRef = useRef<HTMLCanvasElement | null>(null)
+    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
 
     let frameIdx = 0
-    let mediaRecorder
+    let mediaRecorder:MediaRecorder
 
     useEffect(() => {
         frameIdx = 0
@@ -23,7 +35,7 @@ export default function PlayingCanvas({
             canvas.width = canvasSize.width
             canvas.height = canvasSize.height
             const ctx = canvas.getContext('2d')
-            setContext(ctx)
+            if (ctx) setContext(ctx)
         }
     })
 
@@ -59,22 +71,22 @@ export default function PlayingCanvas({
         }
     }, [isDownload])
 
-    const drawFrame = (frame) => {
-        const newContext = canvasRef.current.getContext('2d')
+    const drawFrame = (frame:frame) => {
+        const ctx = canvasRef.current?.getContext('2d')
         if (frame?.imageData) {
-            newContext.putImageData(frame.imageData, 0, 0)
-        } else if (frame && !frame.imageData) {
-            newContext.fillStyle = background
-            newContext.fillRect(0, 0, canvasSize.width, canvasSize.height)
+            ctx?.putImageData(frame.imageData, 0, 0)
+        } else if (ctx && frame && !frame.imageData) {
+            ctx.fillStyle = background
+            ctx.fillRect(0, 0, canvasSize.width, canvasSize.height)
         }
     }
 
     const recordVideo = () => {
         if (isDownload) {
-            const newContext = canvasRef.current.getContext('2d')
-            const videoStream = canvasRef.current.captureStream(30)
-            mediaRecorder = new MediaRecorder(videoStream)
-            let chunks = []
+            const ctx = canvasRef.current?.getContext('2d')
+            const videoStream = canvasRef.current?.captureStream(30)
+            mediaRecorder = new MediaRecorder(videoStream!)
+            let chunks:Blob[] = []
             let videoURL
 
             mediaRecorder.ondataavailable = (e) => {
@@ -89,7 +101,7 @@ export default function PlayingCanvas({
 
             mediaRecorder.start()
 
-            const download = (dataURL) => {
+            const download = (dataURL:string) => {
                 const link = document.createElement('a')
                 link.href = dataURL
                 link.download = "online-animation.mp4"
