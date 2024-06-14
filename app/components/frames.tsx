@@ -55,11 +55,13 @@ export default function Frames({
         let newCurrentFrameIdx
 
         if (toFrame === 'left') {
-            if (currentFrameIdx === 0) return
-            newCurrentFrameIdx = currentFrameIdx - 1
+            currentFrameIdx > 0
+                ? newCurrentFrameIdx = currentFrameIdx - 1
+                : newCurrentFrameIdx = frames.length - 1
         } else if (toFrame === 'right') {
-            if (currentFrameIdx === frames.length - 1) return
-            newCurrentFrameIdx = currentFrameIdx + 1
+            currentFrameIdx < frames.length - 1
+                ? newCurrentFrameIdx = currentFrameIdx + 1
+                : newCurrentFrameIdx = 0
         } else {
             newCurrentFrameIdx = toFrame
         }
@@ -97,7 +99,7 @@ export default function Frames({
     return (
         <div id="frames-bar" className={`absolute md:static ${mobileDisplay ? 'bottom-2' : '-bottom-[250px]'} transition-all duration-700 left-1/2 -translate-x-1/2 
         md:translate-x-0 md:max-w-[820px] lg:max-w-[1120px] flex flex-col gap-1 md:mx-auto z-20`}>
-            <div id="frames-buttons" className="w-full bg-white/10 py-2 mt-4 text-white/70 flex gap-6 items-center rounded-t-2xl justify-center">
+            <div id="frames-buttons" className="w-full bg-slate-950 py-2 mt-4 text-white/70 flex gap-6 items-center rounded-t-2xl justify-center">
                 <div title="Add a blank frame" className={framesButtonClass} onClick={addFrame}>
                     <SquarePlus />
                 </div>
@@ -122,11 +124,13 @@ export default function Frames({
                     </div> */}
                 </div>
             </div>
-            <div id="frames-container" className="w-full h-36 md:bg-white/10 p-4 flex gap-2 items-center justify-center rounded-b-2xl">
-                <div className="hidden md:flex w-8 py-4 mt-2 bg-slate-950 rounded-lg self-start" onClick={() => switchFrame('left')}>
-                    <ChevronLeft className="w-10 h-10 text-white cursor-pointer" />
+            <div id="frames-container" className="relative w-full md:bg-slate-950 p-4 pb-2 rounded-b-2xl">
+                <div className="hidden absolute top-0 left-0 h-full md:flex flex-col w-12 bg-gradient-to-r from-slate-950 from-80% to-transparent rounded-lg items-start justify-between py-2" 
+                onClick={() => switchFrame('left')}>
+                    <ChevronLeft className="mt-10 w-8 h-16 text-white cursor-pointer" />
+                    <div className="bg-slate-950 w-full h-[11px]"></div>
                 </div>
-                <div id="frames" className="flex-1 gap-2 md:gap-4 flex overflow-x-auto justify-start p-2">
+                <div id="frames" className="p-2 px-8 flex-1 gap-2 md:gap-4 flex justify-start overflow-x-scroll scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950">
                     {frames.length &&
                         frames.map((frame, idx) =>
                             <DisplayCanvas key={idx}
@@ -143,7 +147,11 @@ export default function Frames({
                             />
                         )}
                 </div>
-                <div className="hidden md:flex w-8 py-4 mt-2 bg-slate-950 rounded-lg self-start justify-center" onClick={() => switchFrame('right')}><ChevronRight className="w-10 h-10 text-white cursor-pointer" /></div>
+                <div className="hidden absolute top-0 right-0 h-full md:flex flex-col w-12 bg-gradient-to-l from-slate-950 from-70% to-transparent rounded-b-lg items-end justify-between py-2" 
+                onClick={() => switchFrame('right')}>
+                    <ChevronRight className="mt-10 w-8 h-16 text-white cursor-pointer" />
+                    <div className="bg-slate-950 w-full h-[11px]"></div>
+                </div>
             </div>
         </div>
     )

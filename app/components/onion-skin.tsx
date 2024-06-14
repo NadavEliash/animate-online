@@ -70,6 +70,6 @@ export default function OnionSkin({
     return (
         <canvas
             ref={canvasRef}
-            className='absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[100%] md:w-fit rounded-md pointer-events-none z-10 opacity-25'
+            className='absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[100%] md:w-fit rounded-md pointer-events-none z-10 opacity-20'
         />)
 }

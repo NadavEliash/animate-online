@@ -191,15 +191,14 @@ export default function Home() {
     const actionButtonClass = "p-2 md:p-3 rounded-xl cursor-pointer text-black/60 md:text-inherit"
 
     return (
-        <>
             <main className="h-svh bg-white md:bg-transparent">
-                <div className="w-full h-16"></div>
+                <div className="w-full h-12"></div>
                 <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
                 <div id="drawing-bar" className="flex flex-row justify-center md:gap-1 lg:gap-2">
                     <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
                     <div id="action-buttons"
                         className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${showBar === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
-                            md:static md:px-3 lg:px-8 md:py-4 md:bg-white/10 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-2xl`}>
+                            md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-2xl`}>
                         <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
                             <Pencil />
                         </div>
@@ -245,8 +244,8 @@ export default function Home() {
                             <Trash />
                         </div>
                     </div>
-                    <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-white/20 rounded-2xl">
-                        {layers && layers.map((layer, idx) =>
+                    <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-2xl">
+                        {layers.length && layers.map((layer, idx) =>
                             <div key={idx}>
                                 <DrawingCanvas
                                     canvasSize={canvasSize}
@@ -315,6 +314,5 @@ export default function Home() {
                 ></Frames>
                 <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
             </main>
-        </>
     )
 }

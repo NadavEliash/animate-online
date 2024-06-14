@@ -91,7 +91,7 @@ export default function DisplayCanvas({
     const drawTransparentGrid = async () => {
         if (context) {
             const image = await loadImage("https://www.svgrepo.com/show/351866/chess-board.svg")
-            context.globalAlpha = 0.2
+            context.globalAlpha = 0.15
             context.drawImage(image, 0, 0, canvasSize.width, canvasSize.height)
         }
     }
@@ -129,9 +129,9 @@ export default function DisplayCanvas({
     return (
         <div className="flex flex-col items-center justify-center" onClick={handleClick}>
             <canvas ref={canvasRef} width={500} height={500}
-                className={`${size} rounded-md pointer-events-none bg-white ${idx === currentIdx ? 'border-4 border-purple-500' : ''}`}>
+                className={`${size} rounded-md pointer-events-none bg-white ${idx === currentIdx ? 'box-content border-4 border-sky-500' : ''}`}>
             </canvas>
-            <h1 className="text-white">{index}</h1>
+            <h1 className="text-white text-xs my-1">{index}</h1>
         </div>
     )
 }
