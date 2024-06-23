@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, CopyPlus, Download, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
-import { frame } from '../models'
+import { ChevronLeft, ChevronRight, CopyPlus, Download, FolderOpen, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
+import { frame, userMsg } from '../models'
 import DisplayCanvas from './display-canvas';
 
 
@@ -18,7 +18,11 @@ interface FramesProps {
     setIsPlay: Function
     isDownload: Boolean
     setIsDownload: Function
-    showBar: string
+    saveAnimation: Function
+    loadAnimation: Function
+    mobileBars: string
+    userMsg: userMsg | null
+    setUserMsg: Function
 }
 
 export default function Frames({
@@ -35,16 +39,22 @@ export default function Frames({
     setIsPlay,
     isDownload,
     setIsDownload,
-    showBar
+    saveAnimation,
+    loadAnimation,
+    mobileBars,
+    userMsg,
+    setUserMsg
 }: FramesProps) {
 
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
     useEffect(() => {
-        showBar === "frames" ? setMobileDisplay(true) : setMobileDisplay(false)
-    }, [showBar])
+        mobileBars === "frames" ? setMobileDisplay(true) : setMobileDisplay(false)
+    }, [mobileBars])
 
     const addFrame = () => {
+        if (isPlay) return
+
         const newFrame = { id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }
         frames.splice(currentFrameIdx + 1, 0, newFrame)
         setFrames((prev: frame[]) => [...prev])
@@ -52,6 +62,7 @@ export default function Frames({
     }
 
     const switchFrame = (toFrame: string | number) => {
+        if (isPlay) return
         let newCurrentFrameIdx
 
         if (toFrame === 'left') {
@@ -70,6 +81,8 @@ export default function Frames({
     }
 
     const removeFrame = () => {
+        if (isPlay) return
+
         if (!frames.length) {
             return
         } else if (frames.length === 1) {
@@ -82,6 +95,8 @@ export default function Frames({
     }
 
     const duplicateFrame = () => {
+        if (isPlay) return
+
         const newFrame = { id: generateId(), layers: frames[currentFrameIdx].layers }
         frames.splice(currentFrameIdx, 0, newFrame)
         setFrames((prev: frame[]) => [...prev])
@@ -89,9 +104,49 @@ export default function Frames({
     }
 
     const clearAll = () => {
-        setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }])
-        setCurrentFrameIdx(0)
-        clearCanvas()
+        if (isPlay) return
+
+        const callback = () => {
+            setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }])
+            setCurrentFrameIdx(0)
+            clearCanvas()
+        }
+
+        const newUserMsg = {
+            txt: 'Are you sure you want to remove the entire scene?',
+            buttonTxt: 'Yes',
+            input: false,
+            callback,
+            isDisplay: true
+        }
+
+        setUserMsg(newUserMsg)
+    }
+
+    const save = () => {
+        const newUserMsg = {
+            txt: '',
+            buttonTxt: 'Save',
+            input: true,
+            inputLabel: 'Scene name: ',
+            callback: saveAnimation,
+            isDisplay: true
+        }
+
+        setUserMsg(newUserMsg)
+    }
+    
+    const load = () => {
+        const newUserMsg = {
+            txt: '',
+            buttonTxt: 'Load',
+            input: true,
+            inputLabel: 'Scene name: ',
+            callback: loadAnimation,
+            isDisplay: true
+        }
+
+        setUserMsg(newUserMsg)
     }
 
     const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"
@@ -119,14 +174,17 @@ export default function Frames({
                     <div title="Download" className={framesButtonClass} onClick={() => setIsDownload(true)}>
                         <Download />
                     </div>
-                    {/* <div title="Save" className={framesButtonClass}>
+                    <div title="Save" className={framesButtonClass} onClick={() => save()}>
                         <Save />
-                    </div> */}
+                    </div>
+                    <div title="Load" className={framesButtonClass} onClick={() => load()}>
+                        <FolderOpen />
+                    </div>
                 </div>
             </div>
             <div id="frames-container" className="relative w-full md:bg-slate-950 p-4 pb-2 rounded-b-2xl">
-                <div className="hidden absolute top-0 left-0 h-full md:flex flex-col w-12 bg-gradient-to-r from-slate-950 from-80% to-transparent rounded-lg items-start justify-between py-2" 
-                onClick={() => switchFrame('left')}>
+                <div className="hidden absolute top-0 left-0 h-full md:flex flex-col w-12 bg-gradient-to-r from-slate-950 from-80% to-transparent rounded-lg items-start justify-between py-2"
+                    onClick={() => switchFrame('left')}>
                     <ChevronLeft className="mt-10 w-8 h-16 text-white cursor-pointer" />
                     <div className="bg-slate-950 w-full h-[11px]"></div>
                 </div>
@@ -147,8 +205,8 @@ export default function Frames({
                             />
                         )}
                 </div>
-                <div className="hidden absolute top-0 right-0 h-full md:flex flex-col w-12 bg-gradient-to-l from-slate-950 from-70% to-transparent rounded-b-lg items-end justify-between py-2" 
-                onClick={() => switchFrame('right')}>
+                <div className="hidden absolute top-0 right-0 h-full md:flex flex-col w-12 bg-gradient-to-l from-slate-950 from-70% to-transparent rounded-b-lg items-end justify-between py-2"
+                    onClick={() => switchFrame('right')}>
                     <ChevronRight className="mt-10 w-8 h-16 text-white cursor-pointer" />
                     <div className="bg-slate-950 w-full h-[11px]"></div>
                 </div>

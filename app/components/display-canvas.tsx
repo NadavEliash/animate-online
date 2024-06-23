@@ -76,22 +76,28 @@ export default function DisplayCanvas({
 
     useEffect(() => {
         if (layer) {
-            const ctx = canvasRef.current?.getContext('2d')
+            const ctx = canvasRef.current?.getContext('2d', { willReadFrequently: true })
             if (ctx) {
                 ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
-                if (idx !== 0) drawTransparentGrid()
-
-                if (layer.drawingActions && layer.drawingActions.length) {
-                    drawLayer(ctx, layer.drawingActions)
+                if (idx !== 0) {
+                    drawTransparentGrid()
+                    if (layer.drawingActions && layer.drawingActions.length) {
+                        setTimeout(() => {
+                            drawLayer(ctx, layer.drawingActions)
+                        }, 20);
+                    }
+                } else {
+                    ctx.fillStyle = background
+                    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height)
                 }
             }
         }
     }, [layers])
 
+
     const drawTransparentGrid = async () => {
         if (context) {
-            const image = await loadImage("https://www.svgrepo.com/show/351866/chess-board.svg")
-            context.globalAlpha = 0.15
+            const image = await loadImage("/transparent.png")
             context.drawImage(image, 0, 0, canvasSize.width, canvasSize.height)
         }
     }
@@ -100,7 +106,6 @@ export default function DisplayCanvas({
         for (const action of actions) {
             try {
                 const image = await loadImage(action.url)
-                ctx.globalAlpha = 1
                 ctx.drawImage(image, 0, 0)
             } catch (error) {
                 console.error('Error loading image', error)
@@ -111,15 +116,17 @@ export default function DisplayCanvas({
         }
 
         if (frames && setFrames && last) {
-            const imageData = ctx.getImageData(0, 0, canvasSize.width, canvasSize.height)
-            frames[idx].imageData = imageData
-            setFrames((prev: frame[]) => [...prev])
+            canvasRef.current?.toBlob((blob) => {
+                const url = URL.createObjectURL(blob!)
+                frames[idx].frameUrl = url
+                setFrames((prev: frame[]) => [...prev])
+            })
         }
     }
 
     const handleClick = () => {
-            if (layer && idx === 0) return
-            if (setCurrentIdx) setCurrentIdx(idx)
+        if (layer && idx === 0) return
+        if (setCurrentIdx) setCurrentIdx(idx)
     }
 
     const index = frame

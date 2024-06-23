@@ -15,7 +15,7 @@ interface LayersProps {
     generateId: Function
     background: string
     loadImage: Function
-    showBar: string
+    mobileBars: string
 }
 
 export default function Layers({
@@ -27,14 +27,14 @@ export default function Layers({
     generateId,
     background,
     loadImage,
-    showBar
+    mobileBars
 }: LayersProps) {
 
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
     useEffect(() => {
-        showBar === "layers" ? setMobileDisplay(true) : setMobileDisplay(false)
-    }, [showBar])
+        mobileBars === "layers" ? setMobileDisplay(true) : setMobileDisplay(false)
+    }, [mobileBars])
 
     const addLayer = () => {
         const newLayers = layers

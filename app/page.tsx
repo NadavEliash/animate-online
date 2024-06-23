@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useState, KeyboardEvent } from "react"
 import DrawingCanvas from "./components/drawing-canvas"
 import PlayingCanvas from "./components/playing-canvas"
 import Layers from "./components/layers"
@@ -8,7 +8,7 @@ import Frames from "./components/frames"
 import OnionSkin from "./components/onion-skin"
 import Styles from "./components/styles"
 import Backgrounds from "./components/backgrounds"
-import { action, drawingAction, frame, layer } from "./models"
+import { action, drawingAction, frame, layer, styles, userMsg } from "./models"
 
 import { Sue_Ellen_Francisco } from 'next/font/google'
 
@@ -26,6 +26,7 @@ import {
     ChevronRight,
     ChevronLeft
 } from "lucide-react"
+import UserMsg from "./components/user-msg"
 
 const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
@@ -44,27 +45,20 @@ export default function Home() {
     const [isPlay, setIsPlay] = useState(false)
     const [isDownload, setIsDownload] = useState(false)
 
-    const [showBar, setShowBar] = useState('')
+    const [mobileBars, setMobileBars] = useState('')
+    const [userMsg, setUserMsg] = useState<userMsg | null>(null)
 
     const [styleBar, setStyleBar] = useState(false)
     const [bgBar, setBgBar] = useState(false)
 
-    const [styles, setStyles] = useState({
+    const [styles, setStyles] = useState<styles>({
         lineWidth: 6,
-        strokeStyle: "black"
+        strokeStyle: "#000000",
+        eraserWidth: 6,
+        fillMode: false
     })
 
     const [background, setBackground] = useState("white")
-
-    useEffect(() => {
-        document.addEventListener("keydown", (e) => {
-            if (e.key === 'z' && e.ctrlKey) {
-                console.log('undo')
-                undo()
-            }
-            if (e.key === 'space') toggleAnimation()
-        })
-    }, [])
 
     useEffect(() => {
         const width = window.innerWidth
@@ -129,7 +123,7 @@ export default function Home() {
         if (actions.length) {
             const cancelled = actions.shift()
             if (cancelled) {
-              setUndoHistory(prev=>[cancelled, ...prev])
+                setUndoHistory(prev => [cancelled, ...prev])
             }
 
             const newLayer = layers[currentLayerIdx]
@@ -158,7 +152,7 @@ export default function Home() {
         return Math.floor(Math.random() * 99999) + ''
     }
 
-    const loadImage = (url:string) => {
+    const loadImage = (url: string) => {
         return new Promise((resolve, reject) => {
             const image = new Image()
             image.onload = () => resolve(image)
@@ -177,13 +171,46 @@ export default function Home() {
         setIsDownload(true)
     }
 
-    // STYLE CLASSES AND EXPERIENCE FUNCTIONALITY
+    const saveAnimation = (name: string) => {
+        const item = JSON.stringify(frames)
+        localStorage.setItem(`animation-${name}`, item)
+    }
 
-    const handleBars = (bar:string) => {
+    const loadAnimation = (name: string) => {
+        const framesStr = localStorage.getItem(`animation-${name}`)
+
+        if (framesStr) {
+            const newFrames = JSON.parse(framesStr)
+            clearCanvas()
+            setFrames(newFrames)
+        }
+    }
+
+    // STYLE CLASSES & UX FUNCTIONALITY
+
+    const handleKeyboard = (e: KeyboardEvent) => {
+        if (e.key === 'z' && e.ctrlKey) {
+            undo()
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
+            redo()
+        }
+
+        if (e.key === 'b') onDraw()
+        if (e.key === 'e') onErase()
+        if (e.key === 'm') setAction({ isTranslate: true })
+        if (e.key === 'r') setAction({ isRotate: true })
+        if (e.key === 's') setAction({ isScale: true })
+        if (e.key === 'c') clearCanvas()
+
+        // if (e.code === 'Space') toggleAnimation()
+    }
+
+    const handleBars = (bar: string) => {
         setTimeout(() => {
-            showBar === bar
-                ? setShowBar('')
-                : setShowBar(bar)
+            mobileBars === bar
+                ? setMobileBars('')
+                : setMobileBars(bar)
         }, 100);
     }
 
@@ -191,128 +218,139 @@ export default function Home() {
     const actionButtonClass = "p-2 md:p-3 rounded-xl cursor-pointer text-black/60 md:text-inherit"
 
     return (
-            <main className="h-svh bg-white md:bg-transparent">
-                <div className="w-full h-12"></div>
-                <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
-                <div id="drawing-bar" className="flex flex-row justify-center md:gap-1 lg:gap-2">
-                    <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
-                    <div id="action-buttons"
-                        className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${showBar === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
+        <main className="h-svh bg-white md:bg-transparent" onKeyDown={handleKeyboard} tabIndex={0}>
+            <div className="w-full h-12"></div>
+            {userMsg?.isDisplay && <UserMsg
+                userMsg={userMsg}
+                setUserMsg={setUserMsg}
+            />}
+            <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
+            <div id="main-flex" className="flex flex-row justify-center md:gap-1 lg:gap-2">
+                <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
+                <div id="action-buttons"
+                    className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${mobileBars === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
                             md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-2xl`}>
-                        <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
-                            <Pencil />
-                        </div>
-                        <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
-                            <Eraser />
-                        </div>
-                        {styleBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setStyleBar(false)}></div>}
-                        <div id="styleBar" className={`${actionButtonClass} relative`} onClick={() => setStyleBar(true)}>
+                    <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
+                        <Pencil />
+                    </div>
+                    <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
+                        <Eraser />
+                    </div>
+                    {styleBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-white/20 z-20" onClick={() => setStyleBar(false)}></div>}
+                    <div id="styleBar" className="relative">
+                        <div className={`${actionButtonClass}`} onClick={() => setStyleBar(true)}>
                             <Palette />
-                            {styleBar && <Styles
-                                styleBar={styleBar}
-                                setStyleBar={setStyleBar}
-                                styles={styles}
-                                setStyles={setStyles}
+                        </div>
+                        {styleBar && <Styles
+                            styleBar={styleBar}
+                            setStyleBar={setStyleBar}
+                            styles={styles}
+                            setStyles={setStyles}
+                        />}
+                    </div>
+                    {bgBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setBgBar(false)}></div>}
+                    <div id="bgBar" className="rounded-sm w-6 h-6 bg-white relative cursor-pointer text-black text-sm text-center pt-[2px]" onClick={() => setBgBar(true)}>BG
+                        {bgBar &&
+                            <Backgrounds
+                                bgBar={bgBar}
+                                setBgBar={setBgBar}
+                                background={background}
+                                setBackground={setBackground}
+                                setLayers={setLayers}
                             />}
-                        </div>
-                        {bgBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setBgBar(false)}></div>}
-                        <div id="bgBar" className="rounded-sm w-6 h-6 bg-white relative cursor-pointer text-black text-sm text-center pt-[2px]" onClick={() => setBgBar(true)}>BG
-                            {bgBar &&
-                                <Backgrounds
-                                    bgBar={bgBar}
-                                    setBgBar={setBgBar}
-                                    background={background}
-                                    setBackground={setBackground}
-                                />}
-                        </div>
-                        <div title="Translate" className={`${actionButtonClass} ${action.isTranslate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isTranslate: true })}>
-                            <Move />
-                        </div>
-                        <div title="Rotate" className={`${actionButtonClass}  ${action.isRotate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isRotate: true })}>
-                            <RefreshCw />
-                        </div>
-                        <div title="Scale" className={`${actionButtonClass} ${action.isScale ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isScale: true })}>
-                            <Expand />
-                        </div>
-                        <div title="Undo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={undo}>
-                            <Undo />
-                        </div>
-                        <div title="Redo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={redo}>
-                            <Redo />
-                        </div>
-                        <div title="Clear canvas" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={clearCanvas}>
-                            <Trash />
-                        </div>
                     </div>
-                    <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-2xl">
-                        {layers.length && layers.map((layer, idx) =>
-                            <div key={idx}>
-                                <DrawingCanvas
-                                    canvasSize={canvasSize}
-                                    layers={layers}
-                                    setLayers={setLayers}
-                                    layer={layer}
-                                    idx={idx}
-                                    currentLayerIdx={currentLayerIdx}
-                                    action={action}
-                                    styles={styles}
-                                    background={background}
-                                    loadImage={loadImage}
-                                    clear={clear}
-                                    isPlay={isPlay}
-                                    isDownload={isDownload}
-                                ></DrawingCanvas>
-                            </div>)}
-                        {onionSkin.length > 0 && onionSkin.map(((frame, idx) =>
-                            <div key={idx}>
-                                <OnionSkin
-                                    onionSkin={onionSkin}
-                                    currentFrameIdx={currentFrameIdx}
-                                    canvasSize={canvasSize}
-                                    loadImage={loadImage}
-                                />
-                            </div>
-                        ))}
-                        {(isPlay || isDownload) && <PlayingCanvas
-                            isPlay={isPlay}
-                            isDownload={isDownload}
-                            setIsDownload={setIsDownload}
-                            frames={frames}
-                            canvasSize={canvasSize}
-                            background={background}
-                            loadImage={loadImage}
-                        ></PlayingCanvas>}
+                    <div title="Translate" className={`${actionButtonClass} ${action.isTranslate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isTranslate: true })}>
+                        <Move />
                     </div>
-                    <Layers
-                        layers={layers}
-                        setLayers={setLayers}
-                        canvasSyze={canvasSize}
-                        currentLayerIdx={currentLayerIdx}
-                        setCurrentLayerIdx={setCurrentLayerIdx}
-                        generateId={generateId}
+                    <div title="Rotate" className={`${actionButtonClass}  ${action.isRotate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isRotate: true })}>
+                        <RefreshCw />
+                    </div>
+                    <div title="Scale" className={`${actionButtonClass} ${action.isScale ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isScale: true })}>
+                        <Expand />
+                    </div>
+                    <div title="Undo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={undo}>
+                        <Undo />
+                    </div>
+                    <div title="Redo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={redo}>
+                        <Redo />
+                    </div>
+                    <div title="Clear canvas" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={clearCanvas}>
+                        <Trash />
+                    </div>
+                </div>
+                <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-2xl">
+                    {layers.length && layers.map((layer, idx) =>
+                        <div key={idx}>
+                            <DrawingCanvas
+                                canvasSize={canvasSize}
+                                layers={layers}
+                                setLayers={setLayers}
+                                layer={layer}
+                                idx={idx}
+                                currentLayerIdx={currentLayerIdx}
+                                action={action}
+                                styles={styles}
+                                background={background}
+                                loadImage={loadImage}
+                                clear={clear}
+                                isPlay={isPlay}
+                                isDownload={isDownload}
+                            ></DrawingCanvas>
+                        </div>)}
+                    {onionSkin.length > 0 && onionSkin.map(((frame, idx) =>
+                        <div key={idx}>
+                            <OnionSkin
+                                onionSkin={onionSkin}
+                                currentFrameIdx={currentFrameIdx}
+                                canvasSize={canvasSize}
+                                loadImage={loadImage}
+                            />
+                        </div>
+                    ))}
+                    {(isPlay || isDownload) && <PlayingCanvas
+                        isPlay={isPlay}
+                        isDownload={isDownload}
+                        setIsDownload={setIsDownload}
+                        frames={frames}
+                        canvasSize={canvasSize}
                         background={background}
                         loadImage={loadImage}
-                        showBar={showBar}
-                    ></Layers>
-                    <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} />
+                    ></PlayingCanvas>}
                 </div>
-                <Frames
-                    frames={frames}
-                    setFrames={setFrames}
-                    currentFrameIdx={currentFrameIdx}
-                    setCurrentFrameIdx={setCurrentFrameIdx}
-                    canvasSize={canvasSize}
-                    background={background}
-                    clearCanvas={clearCanvas}
+                <Layers
+                    layers={layers}
+                    setLayers={setLayers}
+                    canvasSyze={canvasSize}
+                    currentLayerIdx={currentLayerIdx}
+                    setCurrentLayerIdx={setCurrentLayerIdx}
                     generateId={generateId}
+                    background={background}
                     loadImage={loadImage}
-                    isPlay={isPlay}
-                    setIsPlay={setIsPlay}
-                    isDownload={isDownload}
-                    setIsDownload={setIsDownload}
-                    showBar={showBar}
-                ></Frames>
-                <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
-            </main>
+                    mobileBars={mobileBars}
+                ></Layers>
+                <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} />
+            </div>
+            <Frames
+                frames={frames}
+                setFrames={setFrames}
+                currentFrameIdx={currentFrameIdx}
+                setCurrentFrameIdx={setCurrentFrameIdx}
+                canvasSize={canvasSize}
+                background={background}
+                clearCanvas={clearCanvas}
+                generateId={generateId}
+                loadImage={loadImage}
+                isPlay={isPlay}
+                setIsPlay={setIsPlay}
+                isDownload={isDownload}
+                setIsDownload={setIsDownload}
+                saveAnimation={saveAnimation}
+                loadAnimation={loadAnimation}
+                mobileBars={mobileBars}
+                userMsg={userMsg}
+                setUserMsg={setUserMsg}
+            ></Frames>
+            <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
+        </main>
     )
 }

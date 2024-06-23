@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { action, drawingAction, layer, path } from "../models"
+import { action, drawingAction, layer, path, styles } from "../models"
 
 import type { MouseEvent } from 'react'
 
@@ -11,7 +11,7 @@ interface DrawingCanvasProps {
     idx: number
     currentLayerIdx: number
     action: action
-    styles: { lineWidth: number, strokeStyle: string }
+    styles: styles
     background: string
     loadImage: Function
     clear: boolean
@@ -147,17 +147,18 @@ export default function DrawingCanvas({
         const ctx = canvasRef.current?.getContext('2d')
         if (ctx) {
             ctx.lineCap = 'round'
-            ctx.lineJoin = 'bevel'
-            ctx.lineWidth = styles.lineWidth
+            ctx.lineJoin = 'round'
+            ctx.lineWidth = styles.fillMode ? 1 : styles.lineWidth
             ctx.strokeStyle = styles.strokeStyle
+            ctx.fillStyle = styles.strokeStyle
 
             if ('nativeEvent' in e) {
                 ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
-                ctx.stroke()
+                styles.fillMode ? ctx.fill() : ctx.stroke()
                 setCurrentPath([...currentPath, { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY }])
             } else if ('touches' in e) {
                 ctx.lineTo(e.touches[0].clientX, e.touches[0].clientY)
-                ctx.stroke()
+                styles.fillMode ? ctx.fill() : ctx.stroke()
                 setCurrentPath([...currentPath, { x: e.touches[0].clientX, y: e.touches[0].clientY }])
             }
         }
@@ -171,8 +172,10 @@ export default function DrawingCanvas({
             ctx.closePath()
             if (currentPath.length > 0) {
                 drawPath(currentPath)
-                const url = canvasRef.current?.toDataURL()
-                if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+                canvasRef.current?.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob!)
+                    if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+                })
             }
             setCurrentPath([])
         }
@@ -191,7 +194,7 @@ export default function DrawingCanvas({
         if (ctx) {
 
             if ('nativeEvent' in e) {
-                ctx.clearRect(e.nativeEvent.offsetX - 6, e.nativeEvent.offsetY - 6, 12, 12)
+                ctx.clearRect(e.nativeEvent.offsetX - styles.eraserWidth, e.nativeEvent.offsetY - styles.eraserWidth, styles.eraserWidth * 2, styles.eraserWidth * 2)
             } else if ('touches' in e) {
                 ctx.clearRect(e.touches[0].clientX - 6, e.touches[0].clientY - 6, 12, 12)
             }
@@ -206,8 +209,10 @@ export default function DrawingCanvas({
     const endErasing = (e: MouseEvent | TouchEvent) => {
         if (!isDrawing || !drawingActions.length) return
         setIsDrawing(false)
-        const url = canvasRef.current?.toDataURL()
-        if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+        canvasRef.current?.toBlob((blob) => {
+            const url = URL.createObjectURL(blob!)
+            if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+        })
     }
 
     const startTransform = async (e: MouseEvent | TouchEvent) => {
@@ -219,8 +224,8 @@ export default function DrawingCanvas({
         } else if ('touches' in e) {
             setTransformGap({ x: e.touches[0].clientX, y: e.touches[0].clientY })
         }
-        const newURL = await redrawImage()
-        if (newURL) setCurrentURL(newURL)
+        
+        await redrawImage()
     }
 
     const translate = async (e: MouseEvent | TouchEvent) => {
@@ -315,8 +320,10 @@ export default function DrawingCanvas({
         setIsTransform(false)
         setTransformGap({ x: 0, y: 0 })
 
-        const url = canvasRef.current?.toDataURL()
-        if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+        canvasRef.current?.toBlob((blob) => {
+            const url = URL.createObjectURL(blob!)
+            if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+        })
         setCurrentURL('')
     }
 
@@ -362,8 +369,12 @@ export default function DrawingCanvas({
                     }
                 }
             }
-        const url = canvasRef.current?.toDataURL()
-        return url
+
+
+        canvasRef.current?.toBlob((blob) => {
+            const url = URL.createObjectURL(blob!)
+            if (url) setCurrentURL(url)
+        })
     }
 
     const drawPath = (paths: path[]) => {
@@ -371,7 +382,7 @@ export default function DrawingCanvas({
 
         if (ctx) {
             ctx.beginPath()
-            ctx.lineWidth = styles.lineWidth
+            ctx.lineWidth = styles.fillMode ? 1 : styles.lineWidth
             ctx.strokeStyle = styles.strokeStyle
             ctx.moveTo(paths[0].x, paths[0].y)
             paths.forEach(point => {

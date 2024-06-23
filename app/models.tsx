@@ -1,3 +1,5 @@
+import { HexColor } from "@uiw/react-color"
+
 export interface drawingAction {
     url: string
     isPath: boolean
@@ -11,7 +13,7 @@ export interface layer {
 export interface frame {
     id: string
     layers: layer[]
-    imageData?: ImageData
+    frameUrl?: string 
 }
 
 export interface action {
@@ -20,6 +22,7 @@ export interface action {
     isTranslate?: boolean
     isRotate?: boolean
     isScale?: boolean
+    isStyle?: boolean
 }
 
 export interface path {
@@ -30,4 +33,15 @@ export interface path {
 export interface styles {
     lineWidth: number
     strokeStyle: string
+    eraserWidth: number
+    fillMode: boolean
+}
+
+export interface userMsg {
+    txt: string
+    buttonTxt: string
+    input: boolean
+    inputLabel?: string
+    callback: Function
+    isDisplay: boolean
 }
