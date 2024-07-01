@@ -135,18 +135,34 @@ export default function Frames({
 
         setUserMsg(newUserMsg)
     }
-    
-    const load = () => {
-        const newUserMsg = {
-            txt: '',
-            buttonTxt: 'Load',
-            input: true,
-            inputLabel: 'Scene name: ',
-            callback: loadAnimation,
-            isDisplay: true
-        }
 
+    const load = async () => {
+        const options = await getStorageFiles()
+        let newUserMsg
+
+        if (options.length) {
+            newUserMsg = {
+                txt: '',
+                buttonTxt: 'Load',
+                input: false,
+                options,
+                callback: loadAnimation,
+                isDisplay: true
+            }
+        } else {
+            newUserMsg = {
+                txt: 'There is no saved animations',
+                buttonTxt: 'Okay',
+                callback: () => { },
+                input: false,
+                isDisplay: true
+            }
+        }
         setUserMsg(newUserMsg)
+    }
+
+    const getStorageFiles = async () => {
+        return Object.keys(localStorage)
     }
 
     const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"

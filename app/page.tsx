@@ -161,28 +161,25 @@ export default function Home() {
         })
     }
 
-    // ANIMATION OPTIONS
-
-    const toggleAnimation = () => {
-        setIsPlay(!isPlay)
-    }
-
-    const download = () => {
-        setIsDownload(true)
-    }
+    // STORAGE
 
     const saveAnimation = (name: string) => {
         const item = JSON.stringify(frames)
-        localStorage.setItem(`animation-${name}`, item)
+        localStorage.setItem(`${name}`, item)
     }
 
     const loadAnimation = (name: string) => {
-        const framesStr = localStorage.getItem(`animation-${name}`)
+        const framesStr = localStorage.getItem(`${name}`)
 
         if (framesStr) {
             const newFrames = JSON.parse(framesStr)
+            setCurrentFrameIdx(newFrames.length)
             clearCanvas()
             setFrames(newFrames)
+
+            setTimeout(() => {
+                setCurrentFrameIdx(0)
+            }, 100);
         }
     }
 

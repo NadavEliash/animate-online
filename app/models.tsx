@@ -13,7 +13,7 @@ export interface layer {
 export interface frame {
     id: string
     layers: layer[]
-    frameUrl?: string 
+    frameUrl?: string
 }
 
 export interface action {
@@ -40,8 +40,9 @@ export interface styles {
 export interface userMsg {
     txt: string
     buttonTxt: string
-    input: boolean
+    input?: boolean
     inputLabel?: string
+    options?: string[]
     callback: Function
     isDisplay: boolean
 }

@@ -3,17 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 192.168.245.41",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@nextui-org/react": "^2.4.2",
+    "@nextui-org/select": "^2.2.2",
     "@nextui-org/slider": "^2.2.12",
     "@nextui-org/system": "^2.2.2",
     "@nextui-org/theme": "^2.2.6",
     "@uiw/react-color": "^2.3.0",
-    "framer-motion": "^11.2.10",
+    "framer-motion": "^11.2.12",
     "lucide-react": "^0.356.0",
     "next": "14.2.3",
     "react": "^18",
