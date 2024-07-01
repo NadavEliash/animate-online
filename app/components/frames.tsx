@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, CopyPlus, Download, FolderOpen, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
 import { frame, userMsg } from '../models'
 import DisplayCanvas from './display-canvas';
@@ -46,11 +46,19 @@ export default function Frames({
     setUserMsg
 }: FramesProps) {
 
+    const framesRef = useRef<HTMLDivElement>(null)
+    const currentRef = useRef<HTMLDivElement>(null)
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
     useEffect(() => {
         mobileBars === "frames" ? setMobileDisplay(true) : setMobileDisplay(false)
     }, [mobileBars])
+
+    useEffect(() => {
+        if (framesRef.current && currentRef.current) {
+            framesRef.current.scrollLeft = currentRef.current.offsetLeft - framesRef.current.offsetLeft
+        }
+    }, [currentFrameIdx])
 
     const addFrame = () => {
         if (isPlay) return
@@ -204,21 +212,23 @@ export default function Frames({
                     <ChevronLeft className="mt-10 w-8 h-16 text-white cursor-pointer" />
                     <div className="bg-slate-950 w-full h-[11px]"></div>
                 </div>
-                <div id="frames" className="p-2 px-8 flex-1 gap-2 md:gap-4 flex justify-start overflow-x-scroll scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950">
+                <div ref={framesRef} id="frames" className="p-2 px-8 flex-1 gap-2 md:gap-4 flex justify-start overflow-x-scroll scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950">
                     {frames.length &&
                         frames.map((frame, idx) =>
-                            <DisplayCanvas key={idx}
-                                size={"w-36 h-24"}
-                                frames={frames}
-                                setFrames={setFrames}
-                                frame={frame}
-                                idx={idx}
-                                currentIdx={currentFrameIdx}
-                                canvasSize={canvasSize}
-                                setCurrentIdx={setCurrentFrameIdx}
-                                background={background}
-                                loadImage={loadImage}
-                            />
+                            <div key={idx} ref={idx === currentFrameIdx ? currentRef : null}>
+                                <DisplayCanvas
+                                    size={"w-36 h-24"}
+                                    frames={frames}
+                                    setFrames={setFrames}
+                                    frame={frame}
+                                    idx={idx}
+                                    currentIdx={currentFrameIdx}
+                                    canvasSize={canvasSize}
+                                    setCurrentIdx={setCurrentFrameIdx}
+                                    background={background}
+                                    loadImage={loadImage}
+                                />
+                            </div>
                         )}
                 </div>
                 <div className="hidden absolute top-0 right-0 h-full md:flex flex-col w-12 bg-gradient-to-l from-slate-950 from-70% to-transparent rounded-b-lg items-end justify-between py-2"

@@ -1,6 +1,6 @@
 import { Dongle } from 'next/font/google'
 import { CopyPlus, Minus, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { layer } from '../models'
 import DisplayCanvas from './display-canvas'
 
@@ -30,11 +30,19 @@ export default function Layers({
     mobileBars
 }: LayersProps) {
 
+    const layersRef = useRef<HTMLDivElement>(null)
+    const currentRef = useRef<HTMLDivElement>(null)
     const [mobileDisplay, setMobileDisplay] = useState(false)
 
     useEffect(() => {
         mobileBars === "layers" ? setMobileDisplay(true) : setMobileDisplay(false)
     }, [mobileBars])
+
+    useEffect(() => {
+        if (layersRef.current && currentRef.current) {
+            layersRef.current.scrollTop = currentRef.current.offsetTop - layersRef.current.offsetTop - 10
+        }
+    }, [currentLayerIdx])
 
     const addLayer = () => {
         const newLayers = layers
@@ -70,21 +78,23 @@ export default function Layers({
         md:relative md:left-0 md:top-0 md:p-1 md:pr-0 md:py-2 lg:p-4 lg:pr-1 md:bg-slate-950 md:rounded-2xl`}>
             <h1 className={`text-center text-xl text-black md:text-3xl md:text-slate-200 ${dongle.className}`}>Layers:</h1>
             <div className="hidden md:block absolute w-full h-6 bg-slate-950 left-0 top-10"></div>
-            <div className="flex-1 flex flex-col-reverse items-center overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950 py-4 md:pr-[1px] lg:pr-1">
+            <div ref={layersRef} className="flex-1 flex flex-col-reverse items-center overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950 py-4 md:pr-[1px] lg:pr-1">
                 {layers.length && layers.map((layer, idx) =>
-                    <DisplayCanvas 
-                    key={idx}
-                    size={"w-28 h-20"}
-                    layer={layer}
-                    idx={idx}
-                    layers={layers}
-                    setLayers={setLayers}
-                    currentIdx={currentLayerIdx}
-                    setCurrentIdx={setCurrentLayerIdx}
-                    canvasSize={canvasSyze}
-                    background={background}
-                    loadImage={loadImage}
-                    />
+                    <div key={idx} ref={idx === currentLayerIdx ? currentRef : null}>
+                        <DisplayCanvas
+                            key={idx}
+                            size={"w-28 h-20"}
+                            layer={layer}
+                            idx={idx}
+                            layers={layers}
+                            setLayers={setLayers}
+                            currentIdx={currentLayerIdx}
+                            setCurrentIdx={setCurrentLayerIdx}
+                            canvasSize={canvasSyze}
+                            background={background}
+                            loadImage={loadImage}
+                        />
+                    </div>
                 )}
             </div>
             <div className="hidden md:block absolute w-full h-4 bg-slate-950 left-0 md:bottom-8 lg:bottom-12"></div>
