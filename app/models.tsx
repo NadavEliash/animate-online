@@ -1,4 +1,5 @@
 import { HexColor } from "@uiw/react-color"
+import { Url } from "next/dist/shared/lib/router/router"
 
 export interface drawingAction {
     url: string
@@ -43,6 +44,13 @@ export interface userMsg {
     input?: boolean
     inputLabel?: string
     options?: string[]
+    optionsLabel?: string
     callback: Function
     isDisplay: boolean
+}
+
+export interface onDownload {
+    video: boolean
+    name: string
+    on: boolean
 }

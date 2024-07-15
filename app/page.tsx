@@ -1,14 +1,15 @@
 'use client'
 
 import { useRef, useEffect, useState, KeyboardEvent } from "react"
-import DrawingCanvas from "./components/drawing-canvas"
-import PlayingCanvas from "./components/playing-canvas"
-import Layers from "./components/layers"
-import Frames from "./components/frames"
-import OnionSkin from "./components/onion-skin"
-import Styles from "./components/styles"
-import Backgrounds from "./components/backgrounds"
-import { action, drawingAction, frame, layer, styles, userMsg } from "./models"
+import DrawingCanvas from "@/components/drawing-canvas" 
+import PlayingCanvas from "@/components/playing-canvas" 
+import Layers from "@/components/layers" 
+import Frames from "@/components/frames" 
+import OnionSkin from "@/components/onion-skin" 
+import Styles from "@/components/styles" 
+import Backgrounds from "@/components/backgrounds" 
+import UserMsg from "@/components/user-msg"
+import { action, drawingAction, frame, layer, onDownload, styles, userMsg } from "./models"
 
 import { Sue_Ellen_Francisco } from 'next/font/google'
 
@@ -26,7 +27,7 @@ import {
     ChevronRight,
     ChevronLeft
 } from "lucide-react"
-import UserMsg from "./components/user-msg"
+
 
 const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
@@ -43,7 +44,9 @@ export default function Home() {
     const [onionSkin, setOnionSkin] = useState<[frame] | []>([])
     const [clear, setClear] = useState(false)
     const [isPlay, setIsPlay] = useState(false)
-    const [isDownload, setIsDownload] = useState(false)
+    const [onDownload, setOnDownload] = useState<onDownload>({ video: true, name: 'animation', on: false })
+    const [isOnion, setIsOnion] = useState(true)
+    const [onFramesButton, setOnFramesButton] = useState([''])
 
     const [mobileBars, setMobileBars] = useState('')
     const [userMsg, setUserMsg] = useState<userMsg | null>(null)
@@ -105,20 +108,26 @@ export default function Home() {
     // DRAWING OPTIONS
 
     const onDraw = () => {
+        if (isPlay || onDownload.on) return
         setAction({ isDraw: true })
     }
 
     const onErase = () => {
+        if (isPlay || onDownload.on) return
         setAction({ isErase: true })
     }
 
     const clearCanvas = () => {
+        if (isPlay || onDownload.on) return
+
         setLayers([{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }])
         setCurrentLayerIdx(1)
         setClear(!clear)
     }
 
     const undo = () => {
+        if (isPlay || onDownload.on) return
+
         const actions = layers[currentLayerIdx].drawingActions
         if (actions.length) {
             const cancelled = actions.shift()
@@ -135,6 +144,8 @@ export default function Home() {
     }
 
     const redo = () => {
+        if (isPlay || onDownload.on) return
+
         if (undoHistory!.length) {
             const lastAction = undoHistory!.shift()
 
@@ -163,7 +174,8 @@ export default function Home() {
 
     // STORAGE
 
-    const saveAnimation = (name: string) => {
+    const saveAnimation = async (name: string) => {
+
         const item = JSON.stringify(frames)
         localStorage.setItem(`${name}`, item)
     }
@@ -186,21 +198,56 @@ export default function Home() {
     // STYLE CLASSES & UX FUNCTIONALITY
 
     const handleKeyboard = (e: KeyboardEvent) => {
+
+        if (userMsg?.isDisplay || onDownload.on) return
+        if (e.key === ' ') setIsPlay(!isPlay)
+
+        if (isPlay) return
+
+        switch (e.key) {
+            case 'b':
+                onDraw()
+                break;
+            case 'e':
+                onErase()
+                break;
+            case 'm':
+                setAction({ isTranslate: true })
+                break;
+            case 'r':
+                setAction({ isRotate: true })
+                break;
+            case 's':
+                setAction({ isScale: true })
+                break;
+            case 'x':
+                clearCanvas()
+                break;
+            case '=':
+                setOnFramesButton(prev => ['add', prev[0]])
+                break;
+            case '-':
+                setOnFramesButton(prev => ['remove', prev[0]])
+                break;
+            case 'd':
+                setOnFramesButton(prev => ['duplicate', prev[0]])
+                break;
+            case 'ArrowLeft':
+                setOnFramesButton(prev => ['left', prev[0]])
+                break;
+            case 'ArrowRight':
+                setOnFramesButton(prev => ['right', prev[0]])
+                break;
+            default:
+                break;
+        }
+
         if (e.key === 'z' && e.ctrlKey) {
             undo()
         }
         if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
             redo()
         }
-
-        if (e.key === 'b') onDraw()
-        if (e.key === 'e') onErase()
-        if (e.key === 'm') setAction({ isTranslate: true })
-        if (e.key === 'r') setAction({ isRotate: true })
-        if (e.key === 's') setAction({ isScale: true })
-        if (e.key === 'c') clearCanvas()
-
-        // if (e.code === 'Space') toggleAnimation()
     }
 
     const handleBars = (bar: string) => {
@@ -226,7 +273,7 @@ export default function Home() {
                 <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
                 <div id="action-buttons"
                     className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${mobileBars === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
-                            md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-2xl`}>
+                            md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-md`}>
                     <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Pencil />
                     </div>
@@ -275,7 +322,7 @@ export default function Home() {
                         <Trash />
                     </div>
                 </div>
-                <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-2xl">
+                <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-md">
                     {layers.length && layers.map((layer, idx) =>
                         <div key={idx}>
                             <DrawingCanvas
@@ -291,10 +338,10 @@ export default function Home() {
                                 loadImage={loadImage}
                                 clear={clear}
                                 isPlay={isPlay}
-                                isDownload={isDownload}
+                                onDownload={onDownload}
                             ></DrawingCanvas>
                         </div>)}
-                    {onionSkin.length > 0 && onionSkin.map(((frame, idx) =>
+                    {isOnion && onionSkin.length > 0 && onionSkin.map(((frame, idx) =>
                         <div key={idx}>
                             <OnionSkin
                                 onionSkin={onionSkin}
@@ -304,10 +351,10 @@ export default function Home() {
                             />
                         </div>
                     ))}
-                    {(isPlay || isDownload) && <PlayingCanvas
+                    {(isPlay || onDownload.on) && <PlayingCanvas
                         isPlay={isPlay}
-                        isDownload={isDownload}
-                        setIsDownload={setIsDownload}
+                        onDownload={onDownload}
+                        setOnDownload={setOnDownload}
                         frames={frames}
                         canvasSize={canvasSize}
                         background={background}
@@ -339,10 +386,14 @@ export default function Home() {
                 loadImage={loadImage}
                 isPlay={isPlay}
                 setIsPlay={setIsPlay}
-                isDownload={isDownload}
-                setIsDownload={setIsDownload}
+                onDownload={onDownload}
+                setOnDownload={setOnDownload}
                 saveAnimation={saveAnimation}
                 loadAnimation={loadAnimation}
+                setIsOnion={setIsOnion}
+                isOnion={isOnion}
+                setOnionSkin={setOnionSkin}
+                onFramesButton={onFramesButton}
                 mobileBars={mobileBars}
                 userMsg={userMsg}
                 setUserMsg={setUserMsg}
