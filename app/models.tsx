@@ -56,5 +56,5 @@ export interface onDownload {
 }
 
 export interface frameToSave {
-    layers: string[]
+    layers: string[] 
 }

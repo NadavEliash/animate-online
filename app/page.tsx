@@ -187,7 +187,7 @@ export default function Home() {
 
         for (const frame of framesToSave) {
             for (let i = 0; i < frame.layers.length; i++) {
-                frame.layers[i] = await urlToBase64(frame.layers[i])
+                frame.layers[i] = await urlToBase64(frame.layers[i]) + ''
             }
         }
 
