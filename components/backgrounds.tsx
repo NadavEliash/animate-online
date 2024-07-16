@@ -1,5 +1,6 @@
 import { Sketch } from "@uiw/react-color"
-import { layer } from "../models"
+import { layer } from "@/app/models"
+
 
 interface BackgroundProps {
     bgBar: boolean

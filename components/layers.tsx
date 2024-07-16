@@ -1,8 +1,8 @@
 import { Dongle } from 'next/font/google'
 import { CopyPlus, Minus, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { layer } from '../models'
 import DisplayCanvas from './display-canvas'
+import { layer } from '@/app/models'
 
 const dongle = Dongle({ weight: ["700"], subsets: ["latin"] })
 

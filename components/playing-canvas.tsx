@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { frame, onDownload } from "../models"
+import { frame, onDownload } from "@/app/models"
 
 interface PlayingCanvasProps {
     isPlay: boolean

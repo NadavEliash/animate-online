@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { styles } from "../models"
+import { styles } from "@/app/models"
 import { Eraser, Pencil, X } from "lucide-react"
 import { Sketch } from "@uiw/react-color"
 import { Sue_Ellen_Francisco } from "next/font/google"
