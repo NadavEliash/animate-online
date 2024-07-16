@@ -54,3 +54,7 @@ export interface onDownload {
     name: string
     on: boolean
 }
+
+export interface frameToSave {
+    layers: string[]
+}

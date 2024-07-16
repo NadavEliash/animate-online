@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { action, drawingAction, layer, onDownload, path, styles } from "../models"
+import { action, drawingAction, layer, onDownload, path, styles } from "@/app/models"
 
 import type { MouseEvent } from 'react'
 

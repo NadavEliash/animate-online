@@ -1,15 +1,16 @@
 'use client'
 
 import { useRef, useEffect, useState, KeyboardEvent } from "react"
-import DrawingCanvas from "@/components/drawing-canvas" 
-import PlayingCanvas from "@/components/playing-canvas" 
-import Layers from "@/components/layers" 
-import Frames from "@/components/frames" 
-import OnionSkin from "@/components/onion-skin" 
-import Styles from "@/components/styles" 
-import Backgrounds from "@/components/backgrounds" 
+import { useLiveQuery } from "dexie-react-hooks"
+import DrawingCanvas from "@/components/drawing-canvas"
+import PlayingCanvas from "@/components/playing-canvas"
+import Layers from "@/components/layers"
+import Frames from "@/components/frames"
+import OnionSkin from "@/components/onion-skin"
+import Styles from "@/components/styles"
+import Backgrounds from "@/components/backgrounds"
 import UserMsg from "@/components/user-msg"
-import { action, drawingAction, frame, layer, onDownload, styles, userMsg } from "./models"
+import { action, drawingAction, frame, frameToSave, layer, onDownload, styles, userMsg } from "./models"
 
 import { Sue_Ellen_Francisco } from 'next/font/google'
 
@@ -27,11 +28,14 @@ import {
     ChevronRight,
     ChevronLeft
 } from "lucide-react"
+import { db, Scene } from "./db/db.model"
+import { base64ToUrl, generateId, urlToBase64 } from "./lib/util"
 
 
 const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 export default function Home() {
+    const scenes = useLiveQuery(() => db.scenes.toArray())
 
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 })
     const [action, setAction] = useState<action>({ isDraw: true })
@@ -159,10 +163,6 @@ export default function Home() {
 
     // UTILS
 
-    const generateId = () => {
-        return Math.floor(Math.random() * 99999) + ''
-    }
-
     const loadImage = (url: string) => {
         return new Promise((resolve, reject) => {
             const image = new Image()
@@ -176,22 +176,61 @@ export default function Home() {
 
     const saveAnimation = async (name: string) => {
 
-        const item = JSON.stringify(frames)
-        localStorage.setItem(`${name}`, item)
+        let framesToSave: frameToSave[] = []
+
+        for (let i = 0; i < frames.length; i++) {
+            framesToSave.push({ layers: [] })
+            frames[i].layers.forEach(layer => {
+                if (layer.drawingActions.length) framesToSave[i].layers.push(layer.drawingActions[0].url)
+            })
+        }
+
+        for (const frame of framesToSave) {
+            for (let i = 0; i < frame.layers.length; i++) {
+                frame.layers[i] = await urlToBase64(frame.layers[i])
+            }
+        }
+
+        await db.scenes.add({
+            id: generateId(),
+            name,
+            frames: framesToSave
+        })
     }
 
-    const loadAnimation = (name: string) => {
-        const framesStr = localStorage.getItem(`${name}`)
+    const loadAnimation = async (input = '', name: string) => {
 
-        if (framesStr) {
-            const newFrames = JSON.parse(framesStr)
-            setCurrentFrameIdx(newFrames.length)
+        const scene = scenes?.find(scene => scene.name === name)
+
+        if (scene?.frames.length) {
+            setCurrentFrameIdx(scene.frames.length)
             clearCanvas()
-            setFrames(newFrames)
+
+            const framesToLoad: frame[] = []
+
+            for (let i = 0; i < scene.frames.length; i++) {
+                const loadedUrls = scene.frames[i].layers
+                const layersToLoad: layer[] = [{ id: generateId(), drawingActions: [] }]
+
+                for (const url of loadedUrls) {
+                    const newLayer = {
+                        id: generateId(),
+                        drawingActions: [{ url: await base64ToUrl(url), isPath: false }]
+                    }
+                    layersToLoad.push(newLayer)
+                }
+
+                framesToLoad.push({
+                    id: generateId(),
+                    layers: layersToLoad
+                })
+            }
+
+            setFrames(framesToLoad)
 
             setTimeout(() => {
                 setCurrentFrameIdx(0)
-            }, 100);
+            }, 100)
         }
     }
 

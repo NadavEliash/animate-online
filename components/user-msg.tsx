@@ -1,7 +1,7 @@
-import { X } from "lucide-react"
-import { userMsg } from "../models"
 import { useState } from "react"
+import { userMsg } from "@/app/models"; 
 import { Select, SelectSection, SelectItem } from "@nextui-org/select";
+import { X } from "lucide-react"
 
 export default function UserMsg({
     userMsg,

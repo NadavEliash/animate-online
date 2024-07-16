@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { drawingAction, frame, layer } from "../models"
+import { drawingAction, frame, layer }  from "@/app/models"
+
 
 interface OnionSkinProps {
     onionSkin: frame[]

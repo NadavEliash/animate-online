@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, CopyPlus, Download, FolderOpen, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react";
-import { frame, onDownload, userMsg } from '../models'
+import { ChevronLeft, ChevronRight, CopyPlus, Download, FolderOpen, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react"
 import DisplayCanvas from './display-canvas';
+import { frame, onDownload, userMsg } from '@/app/models';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/app/db/db.model';
 
 
 interface FramesProps {
@@ -57,6 +59,8 @@ export default function Frames({
     const framesRef = useRef<HTMLDivElement>(null)
     const currentRef = useRef<HTMLDivElement>(null)
     const [mobileDisplay, setMobileDisplay] = useState(false)
+
+    const scenes = useLiveQuery(() => db.scenes.toArray())
 
     useEffect(() => {
         mobileBars === "frames" ? setMobileDisplay(true) : setMobileDisplay(false)
@@ -178,10 +182,10 @@ export default function Frames({
     }
 
     const load = async () => {
-        const options = await getStorageFiles()
+        const options = scenes?.map(scene => scene.name)
         let newUserMsg
 
-        if (options.length) {
+        if (options?.length) {
             newUserMsg = {
                 txt: '',
                 buttonTxt: 'Load',
@@ -221,6 +225,7 @@ export default function Frames({
     const getStorageFiles = async () => {
         return Object.keys(localStorage)
     }
+
 
     const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"
 
