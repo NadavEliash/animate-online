@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { drawingAction, frame, layer } from "@/app/models"
+import { useDraggable } from "@dnd-kit/core"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 interface DisplayCanvasProps {
     size: string
@@ -15,6 +18,7 @@ interface DisplayCanvasProps {
     setCurrentIdx?: Function
     background: string
     loadImage: Function
+    id: string
 }
 
 export default function DisplayCanvas({
@@ -31,12 +35,20 @@ export default function DisplayCanvas({
     setCurrentIdx,
     background,
     loadImage,
+    id
 }: DisplayCanvasProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
-    const [isDragging, setIsDragging] = useState(false)
-    const [currentFrame, setCurrentFrame] = useState(null)
+
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id })
+
+    const style = {
+        transition,
+        transform: CSS.Transform.toString(transform)
+    }
+
+
 
     useEffect(() => {
         if (canvasRef.current) {
@@ -134,7 +146,7 @@ export default function DisplayCanvas({
         : idx === 0 ? 'BG' : '0' + idx
 
     return (
-        <div className="flex flex-col items-center justify-center" onClick={handleClick}>
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex flex-col items-center justify-center outline-none" onClick={handleClick}>
             <canvas ref={canvasRef} width={500} height={500}
                 className={`${size} rounded-md pointer-events-none bg-white ${idx === currentIdx ? 'box-content border-4 border-sky-500' : ''}`}>
             </canvas>

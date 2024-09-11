@@ -1,11 +1,11 @@
 'use client'
 
-import { useRef, useEffect, useState, KeyboardEvent } from "react"
+import { useRef, useEffect, useState, KeyboardEvent, useMemo } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import DrawingCanvas from "@/components/drawing-canvas"
 import PlayingCanvas from "@/components/playing-canvas"
 import Layers from "@/components/layers"
-import Frames from "@/components/frames"
+import BottomBar from "@/components/bottom-bar"
 import OnionSkin from "@/components/onion-skin"
 import Styles from "@/components/styles"
 import Backgrounds from "@/components/backgrounds"
@@ -67,6 +67,13 @@ export default function Home() {
 
     const [background, setBackground] = useState("white")
 
+    const memoizedLayers = useMemo(() => {
+        if (frames[currentFrameIdx]) {
+            return [...frames[currentFrameIdx].layers]
+        }
+        return layers
+    }, [frames, currentFrameIdx])
+
     useEffect(() => {
         const width = window.innerWidth
         const height = window.innerHeight
@@ -98,10 +105,10 @@ export default function Home() {
 
     useEffect(() => {
         if (frames[currentFrameIdx]) {
-            setLayers([...frames[currentFrameIdx].layers])
+            const memoizedLayers = [...frames[currentFrameIdx].layers]
+            setLayers(memoizedLayers)
             setClear(!clear)
             setCurrentLayerIdx(frames[currentFrameIdx].layers.length - 1)
-
 
             if (currentFrameIdx >= 1) {
                 setOnionSkin([frames[currentFrameIdx - 1]])
@@ -413,7 +420,7 @@ export default function Home() {
                 ></Layers>
                 <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} />
             </div>
-            <Frames
+            <BottomBar
                 frames={frames}
                 setFrames={setFrames}
                 currentFrameIdx={currentFrameIdx}
@@ -436,7 +443,7 @@ export default function Home() {
                 mobileBars={mobileBars}
                 userMsg={userMsg}
                 setUserMsg={setUserMsg}
-            ></Frames>
+            ></BottomBar>
             <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
         </main>
     )
