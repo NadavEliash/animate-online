@@ -93,6 +93,7 @@ export default function Layers({
                             canvasSize={canvasSyze}
                             background={background}
                             loadImage={loadImage}
+                            id={layer.id}
                         />
                     </div>
                 )}
