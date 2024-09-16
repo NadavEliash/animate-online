@@ -10,9 +10,10 @@
 
 body {
   max-height: 100%;
+  /* background-color: rgb(15 23 42); */
   color: rgb(var(--foreground-rgb));
   background: radial-gradient(circle at center,
-      rgb(var(--background-end-rgb)) 10%,
+      rgb(var(--background-end-rgb)) 20%,
       rgb(var(--background-start-rgb))
     );
     background-attachment: fixed;

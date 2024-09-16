@@ -45,8 +45,10 @@ export default function Home() {
     const [currentFrameIdx, setCurrentFrameIdx] = useState(0)
     const [actionHistory, setActionHistory] = useState([])
     const [undoHistory, setUndoHistory] = useState<drawingAction[] | []>([])
+    const [redraw, setRedraw] = useState(false)
     const [onionSkin, setOnionSkin] = useState<[frame] | []>([])
     const [clear, setClear] = useState(false)
+    const [removedFrame, setRemovedFrame] = useState<frame | null>(null)
     const [isPlay, setIsPlay] = useState(false)
     const [onDownload, setOnDownload] = useState<onDownload>({ video: true, name: 'animation', on: false })
     const [isOnion, setIsOnion] = useState(true)
@@ -57,6 +59,7 @@ export default function Home() {
 
     const [styleBar, setStyleBar] = useState(false)
     const [bgBar, setBgBar] = useState(false)
+    const [hotKeys, setHotKeys] = useState(false)
 
     const [styles, setStyles] = useState<styles>({
         lineWidth: 6,
@@ -131,13 +134,16 @@ export default function Home() {
     const clearCanvas = () => {
         if (isPlay || onDownload.on) return
 
+        setRemovedFrame({ id: frames[currentFrameIdx].id, layers })
         setLayers([{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }])
+        setUndoHistory([])
         setCurrentLayerIdx(1)
         setClear(!clear)
     }
 
     const undo = () => {
         if (isPlay || onDownload.on) return
+        setRedraw(!redraw)
 
         const actions = layers[currentLayerIdx].drawingActions
         if (actions.length) {
@@ -151,11 +157,18 @@ export default function Home() {
             const newLayers = layers
             newLayers.splice(currentLayerIdx, 1, newLayer)
             setLayers(prev => [...newLayers])
+        } else {
+            if (removedFrame && removedFrame.id === frames[currentFrameIdx].id) {
+                const newLayers = removedFrame.layers
+                setLayers(newLayers)
+                setCurrentLayerIdx(newLayers.length - 1)
+            }
         }
     }
 
     const redo = () => {
         if (isPlay || onDownload.on) return
+        setRedraw(!redraw)
 
         if (undoHistory!.length) {
             const lastAction = undoHistory!.shift()
@@ -252,7 +265,7 @@ export default function Home() {
         if (isPlay) return
 
         switch (e.key) {
-            case 'b':
+            case 'p':
                 onDraw()
                 break;
             case 'e':
@@ -270,14 +283,11 @@ export default function Home() {
             case 'x':
                 clearCanvas()
                 break;
-            case '=':
+            case '+':
                 setOnFramesButton(prev => ['add', prev[0]])
                 break;
             case '-':
                 setOnFramesButton(prev => ['remove', prev[0]])
-                break;
-            case 'd':
-                setOnFramesButton(prev => ['duplicate', prev[0]])
                 break;
             case 'ArrowLeft':
                 setOnFramesButton(prev => ['left', prev[0]])
@@ -295,6 +305,13 @@ export default function Home() {
         if (e.ctrlKey && e.shiftKey && e.key === 'Z') {
             redo()
         }
+        if (e.key === 'd' && e.ctrlKey) {
+            e.preventDefault()
+            setOnFramesButton(prev => ['duplicate', prev[0]])
+        }
+        if (e.key === 'x' && e.ctrlKey) {
+            setOnFramesButton(prev => ['clearAll', prev[0]])
+        }
     }
 
     const handleBars = (bar: string) => {
@@ -306,7 +323,7 @@ export default function Home() {
     }
 
     const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110"
-    const actionButtonClass = "p-2 md:p-3 rounded-xl cursor-pointer text-black/60 md:text-inherit"
+    const actionButtonClass = "relative p-2 md:p-3 rounded-xl cursor-pointer text-black/60 md:text-inherit"
 
     return (
         <main className="h-svh bg-white md:bg-transparent" onKeyDown={handleKeyboard} tabIndex={0}>
@@ -316,6 +333,7 @@ export default function Home() {
                 setUserMsg={setUserMsg}
             />}
             <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
+            <div className="absolute left-10 top-10 p-3 rounded-lg text-white bg-slate-50/20 cursor-pointer" onClick={() => setHotKeys(!hotKeys)}>Hot-Keys</div>
             <div id="main-flex" className="flex flex-row justify-center md:gap-1 lg:gap-2">
                 <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
                 <div id="action-buttons"
@@ -323,9 +341,11 @@ export default function Home() {
                             md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-md`}>
                     <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Pencil />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">p</p>}
                     </div>
                     <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Eraser />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">e</p>}
                     </div>
                     {styleBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-white/20 z-20" onClick={() => setStyleBar(false)}></div>}
                     <div id="styleBar" className="relative">
@@ -352,21 +372,27 @@ export default function Home() {
                     </div>
                     <div title="Translate" className={`${actionButtonClass} ${action.isTranslate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isTranslate: true })}>
                         <Move />
+                        {hotKeys && <p className="absolute bottom-0 -right-4 text-sm">m</p>}
                     </div>
                     <div title="Rotate" className={`${actionButtonClass}  ${action.isRotate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isRotate: true })}>
                         <RefreshCw />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">r</p>}
                     </div>
                     <div title="Scale" className={`${actionButtonClass} ${action.isScale ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isScale: true })}>
                         <Expand />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">s</p>}
                     </div>
                     <div title="Undo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={undo}>
                         <Undo />
+                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm">ctrl+z</p>}
                     </div>
                     <div title="Redo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={redo}>
                         <Redo />
+                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm">ctrl+shift+z</p>}
                     </div>
                     <div title="Clear canvas" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={clearCanvas}>
                         <Trash />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">x</p>}
                     </div>
                 </div>
                 <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-md">
@@ -386,6 +412,7 @@ export default function Home() {
                                 clear={clear}
                                 isPlay={isPlay}
                                 onDownload={onDownload}
+                                redraw={redraw}
                             ></DrawingCanvas>
                         </div>)}
                     {isOnion && onionSkin.length > 0 && onionSkin.map(((frame, idx) =>
@@ -444,6 +471,8 @@ export default function Home() {
                 mobileBars={mobileBars}
                 userMsg={userMsg}
                 setUserMsg={setUserMsg}
+                setRemovedFrame={setRemovedFrame}
+                hotKeys={hotKeys}
             ></BottomBar>
             <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
         </main>

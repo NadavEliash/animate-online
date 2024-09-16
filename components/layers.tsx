@@ -40,7 +40,7 @@ export default function Layers({
 
     useEffect(() => {
         if (layersRef.current && currentRef.current) {
-            layersRef.current.scrollTop = currentRef.current.offsetTop - layersRef.current.offsetTop - 10
+            layersRef.current.scrollTop = currentRef.current.offsetTop - layersRef.current.offsetTop - 100
         }
     }, [currentLayerIdx])
 
@@ -77,7 +77,7 @@ export default function Layers({
         <div className={`absolute ${mobileDisplay ? 'right-0' : '-right-[100px]'} transition-all duration-700 top-20 bg-gray-300/60 rounded-l-2xl flex flex-col gap-1 justify-between max-h-[550px]
         md:relative md:left-0 md:top-0 md:p-1 md:pr-0 md:py-2 lg:p-4 lg:pr-1 md:bg-slate-950 md:rounded-md`}>
             <h1 className={`text-center text-xl text-black md:text-3xl md:text-slate-200 ${dongle.className}`}>Layers:</h1>
-            <div className="hidden md:block absolute w-full h-6 bg-slate-950 left-0 top-10"></div>
+            <div className="hidden md:block absolute w-full h-6 bg-slate-950 left-0 top-11"></div>
             <div ref={layersRef} className="flex-1 flex flex-col-reverse items-center overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950 py-4 md:pr-[1px] lg:pr-1">
                 {layers.length && layers.map((layer, idx) =>
                     <div key={idx} ref={idx === currentLayerIdx ? currentRef : null}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { action, drawingAction, layer, onDownload, path, styles } from "@/app/models"
+import { action, boundingBox, drawingAction, layer, onDownload, path, rotationState, scaleState, styles } from "@/app/models"
 
 import type { MouseEvent } from 'react'
 
@@ -17,6 +17,7 @@ interface DrawingCanvasProps {
     clear: boolean
     isPlay: boolean
     onDownload: onDownload
+    redraw: boolean
 }
 
 export default function DrawingCanvas({
@@ -32,7 +33,8 @@ export default function DrawingCanvas({
     loadImage,
     clear,
     isPlay,
-    onDownload
+    onDownload,
+    redraw
 }: DrawingCanvasProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -83,7 +85,14 @@ export default function DrawingCanvas({
             context.clearRect(0, 0, canvasSize.width, canvasSize.height)
             redrawImage(layer?.drawingActions)
         }
-    }, [layers])
+    }, [layers[0].id])
+
+    useEffect(() => {
+        if (context) {
+            context.clearRect(0, 0, canvasSize.width, canvasSize.height)
+            redrawImage(layer?.drawingActions)
+        }
+    }, [redraw])
 
     useEffect(() => {
         setDrawingActions(layer.drawingActions)
@@ -224,7 +233,7 @@ export default function DrawingCanvas({
         } else if ('touches' in e) {
             setTransformGap({ x: e.touches[0].clientX, y: e.touches[0].clientY })
         }
-        
+
         await redrawImage()
     }
 
@@ -257,62 +266,134 @@ export default function DrawingCanvas({
             }
     }
 
-    const rotate = async (e: MouseEvent | TouchEvent) => {
-        if (!isTransform || !drawingActions.length) return
+    let rotationState: rotationState = {
+        initialAngle: null,
+        currentAngle: 0,
+        centerX: 0,
+        centerY: 0
+    };
 
-        let gapX = 0
-        let gapY = 0
+    const rotate = async (e: MouseEvent | TouchEvent) => {
+        if (!isTransform || !currentURL) return
+
+        let mouseX = 0
+        let mouseY = 0
 
         if ('nativeEvent' in e) {
-            gapX = e.nativeEvent.offsetX - transformGap.x
-            gapY = e.nativeEvent.offsetY - transformGap.y
+            mouseX = e.nativeEvent.offsetX
+            mouseY = e.nativeEvent.offsetY
         } else if ('touches' in e) {
-            gapX = e.touches[0].clientX - transformGap.x
-            gapY = e.touches[0].clientY - transformGap.y
+            mouseX = e.touches[0].clientX
+            mouseY = e.touches[0].clientY
         }
 
         const ctx = canvasRef.current?.getContext('2d')
-        if (ctx)
+        if (ctx) {
             try {
                 const image = await loadImage(currentURL)
+                const boundingBox = await calculateBoundingBox(currentURL)
+
+                const centerX = boundingBox.x + boundingBox.width / 2
+                const centerY = boundingBox.y + boundingBox.height / 2
+
+                const dx = mouseX - centerX
+                const dy = mouseY - centerY
+                const currentAngle = Math.atan2(dy, dx)
+
+                if (rotationState.initialAngle === null) {
+                    rotationState = {
+                        initialAngle: currentAngle,
+                        currentAngle: 0,
+                        centerX,
+                        centerY
+                    };
+                }
+
+                const relativeAngle = currentAngle - rotationState.initialAngle!
+                rotationState.currentAngle = relativeAngle
+
                 ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
                 ctx.save()
-                ctx.translate(canvasSize.width / 2, canvasSize.height / 2)
-                ctx.rotate((gapX) * Math.PI / 180)
-                ctx.drawImage(image, -canvasSize.width / 2, -canvasSize.height / 2)
+
+                ctx.translate(centerX, centerY)
+                ctx.rotate(relativeAngle)
+
+                ctx.drawImage(
+                    image,
+                    boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height,
+                    -boundingBox.width / 2, -boundingBox.height / 2, boundingBox.width, boundingBox.height
+                )
+
                 ctx.restore()
             } catch (error) {
-                console.error("error loading image", error)
+                console.error("error processing image", error)
             }
+        }
     }
 
-    const scale = async (e: MouseEvent | TouchEvent) => {
-        if (!isTransform || !drawingActions.length) return
+    let scaleState: scaleState = {
+        initialDistance: 0,
+        initialScale: 1,
+        centerX: 0,
+        centerY: 0
+    };
 
-        let gapX = 0
-        let gapY = 0
+    const scale = async (e: MouseEvent | TouchEvent) => {
+        if (!isTransform || !currentURL) return
+
+        let mouseX = 0
+        let mouseY = 0
 
         if ('nativeEvent' in e) {
-            gapX = e.nativeEvent.offsetX - transformGap.x
-            gapY = e.nativeEvent.offsetY - transformGap.y
+            mouseX = e.nativeEvent.offsetX
+            mouseY = e.nativeEvent.offsetY
         } else if ('touches' in e) {
-            gapX = e.touches[0].clientX - transformGap.x
-            gapY = e.touches[0].clientY - transformGap.y
+            mouseX = e.touches[0].clientX
+            mouseY = e.touches[0].clientY
         }
 
         const ctx = canvasRef.current?.getContext('2d')
-        if (ctx)
+        if (ctx) {
             try {
                 const image = await loadImage(currentURL)
+                const boundingBox = await calculateBoundingBox(currentURL)
+
+                const centerX = boundingBox.x + boundingBox.width / 2
+                const centerY = boundingBox.y + boundingBox.height / 2
+
+                const dx = mouseX - centerX
+                const dy = mouseY - centerY
+                const distance = Math.sqrt(dx * dx + dy * dy)
+
+                if (scaleState.initialDistance === 0) {
+                    scaleState = {
+                        initialDistance: distance,
+                        initialScale: 1,
+                        centerX,
+                        centerY
+                    };
+                }
+
+                const scaleFactor = distance / scaleState.initialDistance
+                const newScale = scaleState.initialScale * scaleFactor
+
                 ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
                 ctx.save()
-                ctx.translate(canvasSize.width / 2, canvasSize.height / 2)
-                ctx.scale(1 + (gapX / 100), 1 + (gapY / 100))
-                ctx.drawImage(image, -canvasSize.width / 2, -canvasSize.height / 2)
+
+                ctx.translate(centerX, centerY)
+                ctx.scale(newScale, newScale)
+
+                ctx.drawImage(
+                    image,
+                    boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height,
+                    -boundingBox.width / 2, -boundingBox.height / 2, boundingBox.width, boundingBox.height
+                )
+
                 ctx.restore()
             } catch (error) {
-                console.error("error loading image", error)
+                console.error("error processing image", error)
             }
+        }
     }
 
     const endTransform = (e: MouseEvent | TouchEvent) => {
@@ -390,6 +471,48 @@ export default function DrawingCanvas({
             })
             ctx.stroke()
         }
+    }
+
+    const calculateBoundingBox = async (url: string): Promise<boundingBox> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image()
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+                if (!ctx) {
+                    reject(new Error("Could not get canvas context"))
+                    return
+                }
+                ctx.drawImage(img, 0, 0)
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                const data = imageData.data
+
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+
+                for (let y = 0; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        const alpha = data[(y * canvas.width + x) * 4 + 3]
+                        if (alpha > 0) {
+                            minX = Math.min(minX, x)
+                            minY = Math.min(minY, y)
+                            maxX = Math.max(maxX, x)
+                            maxY = Math.max(maxY, y)
+                        }
+                    }
+                }
+
+                resolve({
+                    x: minX,
+                    y: minY,
+                    width: maxX - minX + 1,
+                    height: maxY - minY + 1
+                })
+            }
+            img.onerror = () => reject(new Error("Failed to load image"))
+            img.src = url
+        })
     }
 
     return (

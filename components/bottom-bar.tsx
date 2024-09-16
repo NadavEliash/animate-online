@@ -32,6 +32,8 @@ interface BottomBarProps {
     mobileBars: string
     userMsg: userMsg | null
     setUserMsg: Function
+    setRemovedFrame: Function
+    hotKeys: boolean
 }
 
 export default function BootomBar({
@@ -56,7 +58,9 @@ export default function BootomBar({
     onFramesButton,
     mobileBars,
     userMsg,
-    setUserMsg
+    setUserMsg,
+    setRemovedFrame,
+    hotKeys
 }: BottomBarProps) {
 
     const [mobileDisplay, setMobileDisplay] = useState(false)
@@ -79,6 +83,9 @@ export default function BootomBar({
             case 'duplicate':
                 duplicateFrame()
                 break;
+            case 'clearAll':
+                clearAll()
+                break;
             case 'left':
                 switchFrame('left')
                 break;
@@ -89,7 +96,6 @@ export default function BootomBar({
             default:
                 break;
         }
-
     }, [onFramesButton])
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -105,13 +111,13 @@ export default function BootomBar({
         const destinationIdx = frames.findIndex(frame => frame.id === over?.id)
 
         setCurrentFrameIdx(destinationIdx)
-        
+
         const newFrames = frames
         newFrames.splice(originalIdx, 1)
         newFrames.splice(destinationIdx, 0, activeFrame!)
 
         setFrames(newFrames)
-        
+
         setTimeout(() => {
             setIsDrag(false)
         }, 500);
@@ -173,6 +179,7 @@ export default function BootomBar({
 
         const callback = () => {
             setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }])
+            setRemovedFrame(null)
             setCurrentFrameIdx(0)
             setOnionSkin([])
             clearCanvas()
@@ -248,7 +255,7 @@ export default function BootomBar({
     }
 
 
-    const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"
+    const framesButtonClass = "relative w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"
 
     return (
         <div id="frames-bar" className={`absolute md:static ${mobileDisplay ? 'bottom-2' : '-bottom-[250px]'} transition-all duration-700 left-1/2 -translate-x-1/2 
@@ -256,15 +263,19 @@ export default function BootomBar({
             <div id="frames-buttons" className="w-full bg-slate-950 py-2 mt-2 text-white/70 flex gap-6 items-center justify-center">
                 <div title="Add a blank frame" className={framesButtonClass} onClick={addFrame}>
                     <SquarePlus />
+                    {hotKeys && <p className="absolute -bottom-7 right-2 text-sm z-20">+</p>}
                 </div>
                 <div title="Duplicate frame" className={framesButtonClass} onClick={duplicateFrame} >
                     <CopyPlus />
+                    {hotKeys && <p className="absolute -bottom-7 -right-2 text-sm z-20">ctrl+d</p>}
                 </div>
                 <div title="Remove frame" className={framesButtonClass} onClick={removeFrame}>
                     <SquareMinusIcon />
+                    {hotKeys && <p className="absolute -bottom-8 right-2 text-xl z-20">-</p>}
                 </div>
                 <div title="Clear scene" className={`${framesButtonClass} md:bg-gray-500/40 rounded-full w-8 h-8 text-black/70 flex items-center justify-center`} onClick={clearAll}>
                     <Trash className='w-6 h-6' />
+                    {hotKeys && <p className="absolute -bottom-6 right-0 text-sm z-20">ctrl+x</p>}
                 </div>
                 <div id='animation-options' className='ml-6 flex gap-6 items-center justify-center'>
                     <div title="Onion skin" className={`${framesButtonClass} ${isOnion ? 'bg-white/20' : ''} rounded-full w-8 h-8 text-black/70 flex items-center justify-center`} onClick={() => setIsOnion(!isOnion)}>
@@ -272,6 +283,7 @@ export default function BootomBar({
                     </div>
                     <div title="Play / Pause" className={framesButtonClass} onClick={() => setIsPlay(!isPlay)}>
                         {isPlay ? <Pause /> : <Play />}
+                        {hotKeys && <p className="absolute -bottom-7 -right-1 text-sm z-20">space</p>}
                     </div>
                     <div title="Download" className={framesButtonClass} onClick={download}>
                         <Download />

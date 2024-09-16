@@ -28,6 +28,27 @@ export interface path {
     y: number
 }
 
+export interface boundingBox {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+export interface rotationState {
+    initialAngle: number | null;
+    currentAngle: number;
+    centerX: number;
+    centerY: number;
+}
+
+export interface scaleState {
+    initialDistance: number;
+    initialScale: number;
+    centerX: number;
+    centerY: number;
+}
+
 export interface styles {
     lineWidth: number
     strokeStyle: string

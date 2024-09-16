@@ -26,10 +26,10 @@ export default function UserMsg({
     return (
         <>
             <div className="absolute left-0 top-0 w-full h-svh bg-white/30 z-40" onClick={closeMsg}></div>
-            <div className="absolute bg-slate-950 left-1/2 top-1/2 -translate-x-1/2 -translate-y-2/3 z-50 rounded-xl p-12 w-[30vw]">
+            <div className="absolute bg-slate-950 left-1/2 top-1/2 -translate-x-1/2 -translate-y-2/3 z-50 rounded-xl p-12 w-[24vw] min-w-[300px]">
                 <X onClick={closeMsg} className="text-white absolute right-6 top-6 cursor-pointer" />
                 <div className="flex flex-col gap-4 my-6">
-                    {userMsg.txt && <h1 className="text-white text-xl text-center my-6">{userMsg.txt}</h1>}
+                    {userMsg.txt && <h1 className="text-white text-2xl text-center my-6">{userMsg.txt}</h1>}
                     {userMsg.input &&
                         <div className="flex items-center justify-between">
                             <h1 className="text-white">{userMsg.inputLabel}</h1>
