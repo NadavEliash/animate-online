@@ -48,8 +48,6 @@ export default function DisplayCanvas({
         transform: CSS.Transform.toString(transform)
     }
 
-
-
     useEffect(() => {
         if (canvasRef.current) {
             const canvas = canvasRef.current

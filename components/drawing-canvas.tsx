@@ -85,7 +85,7 @@ export default function DrawingCanvas({
             context.clearRect(0, 0, canvasSize.width, canvasSize.height)
             redrawImage(layer?.drawingActions)
         }
-    }, [layers[0].id])
+    }, [layers[1].id])
 
     useEffect(() => {
         if (context) {
@@ -271,10 +271,10 @@ export default function DrawingCanvas({
         currentAngle: 0,
         centerX: 0,
         centerY: 0
-    };
+    }
 
     const rotate = async (e: MouseEvent | TouchEvent) => {
-        if (!isTransform || !currentURL) return
+        if (!isTransform || !drawingActions.length || !currentURL) return
 
         let mouseX = 0
         let mouseY = 0
@@ -332,14 +332,16 @@ export default function DrawingCanvas({
     }
 
     let scaleState: scaleState = {
-        initialDistance: 0,
-        initialScale: 1,
+        initialDistanceX: 0,
+        initialDistanceY: 0,
+        initialScaleX: 1,
+        initialScaleY: 1,
         centerX: 0,
         centerY: 0
-    };
+    }
 
     const scale = async (e: MouseEvent | TouchEvent) => {
-        if (!isTransform || !currentURL) return
+        if (!isTransform || !drawingActions.length || !currentURL) return
 
         let mouseX = 0
         let mouseY = 0
@@ -361,28 +363,35 @@ export default function DrawingCanvas({
                 const centerX = boundingBox.x + boundingBox.width / 2
                 const centerY = boundingBox.y + boundingBox.height / 2
 
-                const dx = mouseX - centerX
-                const dy = mouseY - centerY
-                const distance = Math.sqrt(dx * dx + dy * dy)
+                const distanceX = Math.abs(mouseX - centerX)
+                const distanceY = Math.abs(mouseY - centerY)
 
-                if (scaleState.initialDistance === 0) {
+                // Initialize scale state if it's the first move
+                if (scaleState.initialDistanceX === 0 && scaleState.initialDistanceY === 0) {
                     scaleState = {
-                        initialDistance: distance,
-                        initialScale: 1,
+                        initialDistanceX: distanceX,
+                        initialDistanceY: distanceY,
+                        initialScaleX: 1,
+                        initialScaleY: 1,
                         centerX,
                         centerY
                     };
                 }
 
-                const scaleFactor = distance / scaleState.initialDistance
-                const newScale = scaleState.initialScale * scaleFactor
+                const scaleFactorX = distanceX / scaleState.initialDistanceX
+                const scaleFactorY = distanceY / scaleState.initialDistanceY
+
+                const newScaleX = scaleState.initialScaleX * scaleFactorX
+                const newScaleY = scaleState.initialScaleY * scaleFactorY
 
                 ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
                 ctx.save()
 
+                // Translate to the center of the bounding box
                 ctx.translate(centerX, centerY)
-                ctx.scale(newScale, newScale)
+                ctx.scale(newScaleX, newScaleY)
 
+                // Draw only the portion of the image within the bounding box
                 ctx.drawImage(
                     image,
                     boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height,

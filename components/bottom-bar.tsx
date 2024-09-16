@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, CopyPlus, Download, FolderOpen, Pause, Play, Save, SquareMinusIcon, SquarePlus, Trash } from "lucide-react"
 import DisplayCanvas from './display-canvas'
-import { frame, onDownload, userMsg } from '@/app/models'
+import { frame, layer, onDownload, userMsg } from '@/app/models'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/app/db/db.model'
 import { DndContext, DragEndEvent, useDndMonitor, useDroppable } from '@dnd-kit/core'
@@ -168,7 +168,11 @@ export default function BootomBar({
     const duplicateFrame = () => {
         if (isPlay) return
 
-        const newFrame = { id: generateId(), layers: frames[currentFrameIdx].layers }
+        const newLayers:layer[] = frames[currentFrameIdx].layers.map(layer => layer = {
+            id: generateId(),
+            drawingActions: layer.drawingActions
+        })
+        const newFrame = { id: generateId(), layers: newLayers }
         frames.splice(currentFrameIdx, 0, newFrame)
         setFrames((prev: frame[]) => [...prev])
         switchFrame('right')

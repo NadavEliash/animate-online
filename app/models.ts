@@ -43,8 +43,10 @@ export interface rotationState {
 }
 
 export interface scaleState {
-    initialDistance: number;
-    initialScale: number;
+    initialDistanceX: number;
+    initialDistanceY: number;
+    initialScaleX: number;
+    initialScaleY: number;
     centerX: number;
     centerY: number;
 }
