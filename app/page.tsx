@@ -341,11 +341,11 @@ export default function Home() {
                             md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-md`}>
                     <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Pencil />
-                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">p</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">p</p>}
                     </div>
                     <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Eraser />
-                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">e</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">e</p>}
                     </div>
                     {styleBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-white/20 z-20" onClick={() => setStyleBar(false)}></div>}
                     <div id="styleBar" className="relative">
@@ -372,27 +372,27 @@ export default function Home() {
                     </div>
                     <div title="Translate" className={`${actionButtonClass} ${action.isTranslate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isTranslate: true })}>
                         <Move />
-                        {hotKeys && <p className="absolute bottom-0 -right-4 text-sm">m</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-4 text-sm opacity-50">m</p>}
                     </div>
                     <div title="Rotate" className={`${actionButtonClass}  ${action.isRotate ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isRotate: true })}>
                         <RefreshCw />
-                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">r</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">r</p>}
                     </div>
                     <div title="Scale" className={`${actionButtonClass} ${action.isScale ? 'bg-white/60 md:bg-white/20' : ''}`} onClick={() => setAction({ isScale: true })}>
                         <Expand />
-                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">s</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">s</p>}
                     </div>
                     <div title="Undo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={undo}>
                         <Undo />
-                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm">ctrl+z</p>}
+                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm opacity-50">ctrl+z</p>}
                     </div>
                     <div title="Redo" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={redo}>
                         <Redo />
-                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm">ctrl+shift+z</p>}
+                        {hotKeys && <p className="absolute -bottom-2 -right-3 text-sm opacity-50">ctrl+shift+z</p>}
                     </div>
                     <div title="Clear canvas" className={`${actionButtonClass} active:bg-white/60 md:active:bg-white/20`} onClick={clearCanvas}>
                         <Trash />
-                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm">x</p>}
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">x</p>}
                     </div>
                 </div>
                 <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-md">

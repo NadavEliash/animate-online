@@ -3,6 +3,7 @@ import { drawingAction, frame, layer } from "@/app/models"
 import { useDraggable } from "@dnd-kit/core"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { XOctagon } from "lucide-react"
 
 interface DisplayCanvasProps {
     size: string
@@ -59,8 +60,6 @@ export default function DisplayCanvas({
                 if (frame || (layer && idx === 0)) {
                     ctx.fillStyle = background
                     ctx.fillRect(0, 0, canvas.width, canvas.height)
-                } else if (layer) {
-                    drawTransparentGrid()
                 }
             }
         }
@@ -89,14 +88,9 @@ export default function DisplayCanvas({
             const ctx = canvasRef.current?.getContext('2d', { willReadFrequently: true })
             if (ctx) {
                 ctx.clearRect(0, 0, canvasSize.width, canvasSize.height)
-                if (idx !== 0) {
-                    drawTransparentGrid()
-                    if (layer.drawingActions && layer.drawingActions.length) {
-                        setTimeout(() => {
-                            drawLayer(ctx, layer.drawingActions)
-                        }, 20);
-                    }
-                } else {
+                if (idx !== 0 && layer.drawingActions.length) {
+                    drawLayer(ctx, layer.drawingActions)
+                } else if (idx === 0) {
                     ctx.fillStyle = background
                     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height)
                 }
@@ -104,13 +98,6 @@ export default function DisplayCanvas({
         }
     }, [layers])
 
-
-    const drawTransparentGrid = async () => {
-        if (context) {
-            const image = await loadImage("/transparent.png")
-            context.drawImage(image, 0, 0, canvasSize.width, canvasSize.height)
-        }
-    }
 
     const drawLayer = async (ctx: CanvasRenderingContext2D, actions: drawingAction[], last?: boolean) => {
         for (const action of actions) {
@@ -146,7 +133,7 @@ export default function DisplayCanvas({
     return (
         <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex flex-col items-center justify-center outline-none" onClick={handleClick}>
             <canvas ref={canvasRef} width={500} height={500}
-                className={`${size} rounded-md pointer-events-none bg-white ${idx === currentIdx ? 'border-4 border-sky-500' : ''}`}>
+                className={`${size} rounded-md pointer-events-none bg-transparent-grid bg-white/70 ${idx === currentIdx ? 'border-4 border-sky-500' : ''}`}>
             </canvas>
             <h1 className="text-white text-xs my-1">{index}</h1>
         </div>

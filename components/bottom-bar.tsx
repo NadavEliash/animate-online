@@ -182,7 +182,7 @@ export default function BootomBar({
         if (isPlay) return
 
         const callback = () => {
-            setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }] }])
+            setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }] }])
             setRemovedFrame(null)
             setCurrentFrameIdx(0)
             setOnionSkin([])
@@ -267,19 +267,19 @@ export default function BootomBar({
             <div id="frames-buttons" className="w-full bg-slate-950 py-2 mt-2 text-white/70 flex gap-6 items-center justify-center">
                 <div title="Add a blank frame" className={framesButtonClass} onClick={addFrame}>
                     <SquarePlus />
-                    {hotKeys && <p className="absolute -bottom-7 right-2 text-sm z-20">+</p>}
+                    {hotKeys && <p className="absolute -bottom-7 right-2 text-sm z-20 opacity-75">+</p>}
                 </div>
                 <div title="Duplicate frame" className={framesButtonClass} onClick={duplicateFrame} >
                     <CopyPlus />
-                    {hotKeys && <p className="absolute -bottom-7 -right-2 text-sm z-20">ctrl+d</p>}
+                    {hotKeys && <p className="absolute -bottom-7 -right-2 text-sm z-20 opacity-75">ctrl+d</p>}
                 </div>
                 <div title="Remove frame" className={framesButtonClass} onClick={removeFrame}>
                     <SquareMinusIcon />
-                    {hotKeys && <p className="absolute -bottom-8 right-2 text-xl z-20">-</p>}
+                    {hotKeys && <p className="absolute -bottom-8 right-2 text-xl z-20 opacity-75">-</p>}
                 </div>
                 <div title="Clear scene" className={`${framesButtonClass} md:bg-gray-500/40 rounded-full w-8 h-8 text-black/70 flex items-center justify-center`} onClick={clearAll}>
                     <Trash className='w-6 h-6' />
-                    {hotKeys && <p className="absolute -bottom-6 right-0 text-sm z-20">ctrl+x</p>}
+                    {hotKeys && <p className="absolute -bottom-6 right-0 text-sm z-20 opacity-75">ctrl+x</p>}
                 </div>
                 <div id='animation-options' className='ml-6 flex gap-6 items-center justify-center'>
                     <div title="Onion skin" className={`${framesButtonClass} ${isOnion ? 'bg-white/20' : ''} rounded-full w-8 h-8 text-black/70 flex items-center justify-center`} onClick={() => setIsOnion(!isOnion)}>
@@ -287,7 +287,7 @@ export default function BootomBar({
                     </div>
                     <div title="Play / Pause" className={framesButtonClass} onClick={() => setIsPlay(!isPlay)}>
                         {isPlay ? <Pause /> : <Play />}
-                        {hotKeys && <p className="absolute -bottom-7 -right-1 text-sm z-20">space</p>}
+                        {hotKeys && <p className="absolute -bottom-7 -right-1 text-sm z-20 opacity-75">space</p>}
                     </div>
                     <div title="Download" className={framesButtonClass} onClick={download}>
                         <Download />

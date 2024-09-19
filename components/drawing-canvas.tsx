@@ -83,9 +83,10 @@ export default function DrawingCanvas({
     useEffect(() => {
         if (context) {
             context.clearRect(0, 0, canvasSize.width, canvasSize.height)
-            redrawImage(layer?.drawingActions)
+            setDrawingActions(layer.drawingActions)
+            redrawImage(layer.drawingActions)
         }
-    }, [layers[1].id])
+    }, [background, layers[1].id, (layers.length)])
 
     useEffect(() => {
         if (context) {

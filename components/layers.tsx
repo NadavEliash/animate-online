@@ -47,27 +47,25 @@ export default function Layers({
     const addLayer = () => {
         const newLayers = layers
         newLayers.splice(currentLayerIdx + 1, 0, { id: generateId(), drawingActions: [] })
-        setLayers(newLayers)
+        setLayers([...newLayers])
         setCurrentLayerIdx(currentLayerIdx + 1)
     }
 
     const copyLayer = () => {
-        const copiedLayer = { id: generateId(), drawingActions: [...layers[currentLayerIdx].drawingActions] }
         const newLayers = layers
-        newLayers.splice(currentLayerIdx + 1, 0, copiedLayer)
-        setLayers(newLayers)
+        newLayers.splice(currentLayerIdx + 1, 0, { id: generateId(), drawingActions: [...layers[currentLayerIdx].drawingActions] })
+        setLayers([...newLayers])
         setCurrentLayerIdx(currentLayerIdx + 1)
     }
 
     const removeLayer = () => {
         const newLayers = layers
-        if (currentLayerIdx === 1 && layers.length === 2) {
-            newLayers.splice(currentLayerIdx, 1, { id: generateId(), drawingActions: [] })
-            setLayers([...newLayers])
-        } else {
-            newLayers.splice(currentLayerIdx, 1)
-            setLayers([...newLayers])
-        }
+        newLayers.splice(currentLayerIdx, 1)
+
+        if (newLayers.length < 2) newLayers.push({ id: generateId(), drawingActions: [] })
+
+        setLayers([...newLayers])
+
         setCurrentLayerIdx((prev: number) => prev > 1 ? prev - 1 : 1)
     }
 
@@ -79,6 +77,7 @@ export default function Layers({
             <h1 className={`text-center text-xl text-black md:text-3xl md:text-slate-200 ${dongle.className}`}>Layers:</h1>
             <div className="hidden md:block absolute w-full h-6 bg-slate-950 left-0 top-11"></div>
             <div ref={layersRef} className="flex-1 flex flex-col-reverse items-center overflow-y-scroll overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-500 scrollbar-track-slate-950 py-4 md:pr-[1px] lg:pr-1">
+
                 {layers.length && layers.map((layer, idx) =>
                     <div key={idx} ref={idx === currentLayerIdx ? currentRef : null}>
                         <DisplayCanvas
