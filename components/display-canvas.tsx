@@ -133,7 +133,7 @@ export default function DisplayCanvas({
     return (
         <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="flex flex-col items-center justify-center outline-none" onClick={handleClick}>
             <canvas ref={canvasRef} width={500} height={500}
-                className={`${size} rounded-md pointer-events-none bg-transparent-grid bg-white/70 ${idx === currentIdx ? 'border-4 border-sky-500' : ''}`}>
+                className={`${size} rounded-md pointer-events-none bg-transparent-grid bg-white/80 ${idx === currentIdx ? 'border-4 border-sky-500' : ''}`}>
             </canvas>
             <h1 className="text-white text-xs my-1">{index}</h1>
         </div>
