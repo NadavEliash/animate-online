@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { action, boundingBox, drawingAction, layer, onDownload, path, rotationState, scaleState, styles } from "@/app/models"
 
-import type { MouseEvent } from 'react'
+import type { KeyboardEventHandler, MouseEvent } from 'react'
 
 interface DrawingCanvasProps {
     canvasSize: { width: number, height: number }
@@ -14,6 +14,12 @@ interface DrawingCanvasProps {
     styles: styles
     background: string
     loadImage: Function
+    isWriting: boolean
+    setIsWriting: Function
+    characters: string
+    setCharacters: Function
+    renderText: boolean
+    setRenderText: Function
     clear: boolean
     isPlay: boolean
     onDownload: onDownload
@@ -31,6 +37,12 @@ export default function DrawingCanvas({
     styles,
     background,
     loadImage,
+    isWriting,
+    setIsWriting,
+    characters,
+    setCharacters,
+    renderText,
+    setRenderText,
     clear,
     isPlay,
     onDownload,
@@ -38,11 +50,16 @@ export default function DrawingCanvas({
 }: DrawingCanvasProps) {
 
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const textBox = useRef<HTMLDivElement>(null)
 
     const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
     const [currentPath, setCurrentPath] = useState<path[] | []>([])
     const [currentURL, setCurrentURL] = useState('')
     const [isDrawing, setIsDrawing] = useState(false)
+    const [textLocation, setTextLocation] = useState({ x: 0, y: 0 })
+    const [textBoxLocation, setTextBoxLocation] = useState<{ left: number, top: number, offsetX: number, offsetY: number }>({ left: 0, top: 0, offsetX: 0, offsetY: 0 })
+    const [textBoxStart, setTextBoxStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
+    const [textBoxIsMoving, setTextBoxIsMoving] = useState(false)
     const [isTransform, setIsTransform] = useState(false)
     const [transformGap, setTransformGap] = useState({ x: 0, y: 0 })
     const [drawingActions, setDrawingActions] = useState<drawingAction[] | []>([])
@@ -82,11 +99,25 @@ export default function DrawingCanvas({
 
     useEffect(() => {
         if (context) {
+            context.font = `${styles.fontSize}px ${styles.font}`
+            context.fillText(characters, textBoxLocation.offsetX, textBoxLocation.offsetY+(styles.fontSize/2))
+            setCharacters('')
+            setRenderText(false)
+            setIsWriting(false)
+            canvasRef.current?.toBlob((blob) => {
+                const url = URL.createObjectURL(blob!)
+                if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
+            })
+        }
+    }, [renderText])
+
+    useEffect(() => {
+        if (context) {
             context.clearRect(0, 0, canvasSize.width, canvasSize.height)
             setDrawingActions(layer.drawingActions)
             redrawImage(layer.drawingActions)
         }
-    }, [background, layers[1].id, (layers.length)])
+    }, [background, layers[1]?.id, (layers.length)])
 
     useEffect(() => {
         if (context) {
@@ -94,6 +125,25 @@ export default function DrawingCanvas({
             redrawImage(layer?.drawingActions)
         }
     }, [redraw])
+
+    useEffect(() => {
+        if (!isWriting) return
+
+        if (textBox.current) {
+            textBox.current.innerHTML = characters
+        }
+        // if (context) {
+        //     context.font = "48px serif";
+        //     context.fillText(characters, textLocation.x, textLocation.y)
+        // }
+    }, [characters])
+
+    useEffect(() => {
+        if (!action.isText) {
+            setIsWriting(false)
+            setCharacters('')
+        }
+    }, [action])
 
     useEffect(() => {
         setDrawingActions(layer.drawingActions)
@@ -105,6 +155,7 @@ export default function DrawingCanvas({
         e.preventDefault()
         if (currentLayerIdx !== idx) return
         if (action.isDraw) startDrawing(e)
+        if (action.isText) startWriting(e)
         if (action.isErase) startErasing(e)
         if (action.isTranslate || action.isRotate || action.isScale) startTransform(e)
     }
@@ -122,6 +173,8 @@ export default function DrawingCanvas({
             rotate(e)
         } else if (action.isScale) {
             scale(e)
+        } else if (action.isText) {
+            onTextBoxMove(e)
         }
     }
 
@@ -131,6 +184,39 @@ export default function DrawingCanvas({
         if (action.isDraw) endDrawing(e)
         if (action.isErase) endErasing(e)
         if (action.isTranslate || action.isRotate || action.isScale) endTransform(e)
+    }
+
+    // TextBox Move
+
+    const onTextBoxDown = (e: MouseEvent | TouchEvent) => {
+        e.preventDefault()
+
+        const clientX = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
+        const clientY = 'nativeEvent' in e ? e.nativeEvent.clientY : (e as TouchEvent).touches[0].clientY
+
+        const box = textBox.current?.getBoundingClientRect();
+        if (box) {
+            setTextBoxStart({ x: clientX - box.left, y: clientY - box.top });
+        }
+
+        setTextBoxIsMoving(true)
+    }
+
+    const onTextBoxMove = (e: MouseEvent | TouchEvent) => {
+        e.preventDefault()
+        if (!textBoxIsMoving) return
+
+        const clientX = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
+        const clientY = 'nativeEvent' in e ? e.nativeEvent.clientY : (e as TouchEvent).touches[0].clientY
+        const offsetX = 'nativeEvent' in e ? e.nativeEvent.offsetX : (e as TouchEvent).touches[0].clientX
+        const offsetY = 'nativeEvent' in e ? e.nativeEvent.offsetY : (e as TouchEvent).touches[0].clientY
+
+        setTextBoxLocation({ left: clientX - textBoxStart.x, top: clientY - textBoxStart.y, offsetX, offsetY })
+    }
+
+    const onTextBoxUp = (e: MouseEvent | TouchEvent) => {
+        e.preventDefault()
+        setTextBoxIsMoving(false)
     }
 
     // ACTIONS
@@ -188,6 +274,28 @@ export default function DrawingCanvas({
                 })
             }
             setCurrentPath([])
+        }
+    }
+
+    const startWriting = (e: MouseEvent | TouchEvent) => {
+        if (isPlay || onDownload.on) return
+        if (canvasRef.current && action.isText) {
+            const ctx = canvasRef.current.getContext('2d')
+            if (ctx) {
+                setIsWriting(true)
+                setCharacters('')
+
+                const left = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
+                const top = 'nativeEvent' in e ? e.nativeEvent.clientY - 20 : (e as TouchEvent).touches[0].clientY
+                const offsetX = 'nativeEvent' in e ? e.nativeEvent.offsetX : (e as TouchEvent).touches[0].clientX
+                const offsetY = 'nativeEvent' in e ? e.nativeEvent.offsetY : (e as TouchEvent).touches[0].clientY
+
+                setTextBoxLocation({ left, top, offsetX, offsetY })
+
+
+                // ctx.fillRect(x, y - 30, 3, 50)
+                // setWritingLocation({ x, y: y + 5 })
+            }
         }
     }
 
@@ -533,6 +641,7 @@ export default function DrawingCanvas({
                 onMouseMove={onMove}
                 onMouseUp={onUp}
                 onMouseOut={onUp}
+                onMouseLeave={onUp}
                 className={`absolute left-0 top-0 
             md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 md:rounded-md 
             ${isTransform ? 'cursor-grab' : isDrawing ? 'cursor-crosshair' : ''} 
@@ -540,6 +649,13 @@ export default function DrawingCanvas({
                 width={canvasSize.width}
                 height={canvasSize.height}>
             </canvas>
+
+            {isWriting &&
+                <div ref={textBox}
+                    onMouseDown={onTextBoxDown}
+                    onMouseUp={onTextBoxUp}
+                    className={`fixed bg-white/40 border-[1px] border-black rounded-lg flex items-center px-2 cursor-pointer`}
+                    style={{ left: textBoxLocation.left, top: textBoxLocation.top, font: styles.font, fontSize: styles.fontSize, height: styles.fontSize }}></div>}
         </>
     )
 }

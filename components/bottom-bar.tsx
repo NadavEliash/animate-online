@@ -182,7 +182,7 @@ export default function BootomBar({
         if (isPlay) return
 
         const callback = () => {
-            setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] }] }])
+            setFrames([{ id: generateId(), layers: [{ id: generateId(), drawingActions: [] },{ id: generateId(), drawingActions: [] }] }])
             setRemovedFrame(null)
             setCurrentFrameIdx(0)
             setOnionSkin([])
@@ -262,9 +262,9 @@ export default function BootomBar({
     const framesButtonClass = "relative w-6 h-6 cursor-pointer hover:scale-110 text-black md:text-inherit"
 
     return (
-        <div id="frames-bar" className={`absolute md:static ${mobileDisplay ? 'bottom-2' : '-bottom-[250px]'} transition-all duration-700 left-1/2 -translate-x-1/2 
-        md:translate-x-0 md:max-w-[820px] lg:max-w-[1120px] flex flex-col gap-1 md:mx-auto z-20`}>
-            <div id="frames-buttons" className="w-full bg-slate-950 py-2 mt-2 text-white/70 flex gap-6 items-center justify-center">
+        <div id="frames-bar" className={`absolute md:static ${mobileDisplay ? 'bottom-2' : '-bottom-[250px]'} transition-all duration-700 left-1/2 -translate-x-1/2
+        md:translate-x-0 w-full max-w-[1120px] flex flex-col md:mx-auto z-20`}>
+            <div id="frames-buttons" className="w-full bg-slate-950 py-2 text-white/70 flex gap-6 items-center justify-center border-y-2 border-y-white/30">
                 <div title="Add a blank frame" className={framesButtonClass} onClick={addFrame}>
                     <SquarePlus />
                     {hotKeys && <p className="absolute -bottom-7 right-2 text-sm z-20 opacity-75">+</p>}

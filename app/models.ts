@@ -16,6 +16,7 @@ export interface frame {
 
 export interface action {
     isDraw?: boolean
+    isText?: boolean
     isErase?: boolean
     isTranslate?: boolean
     isRotate?: boolean
@@ -56,6 +57,8 @@ export interface styles {
     strokeStyle: string
     eraserWidth: number
     fillMode: boolean
+    font: string
+    fontSize: number
 }
 
 export interface userMsg {
@@ -76,5 +79,5 @@ export interface onDownload {
 }
 
 export interface frameToSave {
-    layers: string[] 
+    layers: string[]
 }

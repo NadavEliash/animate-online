@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useState, KeyboardEvent, useMemo } from "react"
+import { useEffect, useState, KeyboardEvent, useMemo } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import DrawingCanvas from "@/components/drawing-canvas"
 import PlayingCanvas from "@/components/playing-canvas"
@@ -26,7 +26,8 @@ import {
     Redo,
     ChevronUp,
     ChevronRight,
-    ChevronLeft
+    ChevronLeft,
+    Type
 } from "lucide-react"
 import { db, Scene } from "./db/db.model"
 import { base64ToUrl, generateId, urlToBase64 } from "./lib/util"
@@ -47,6 +48,9 @@ export default function Home() {
     const [undoHistory, setUndoHistory] = useState<drawingAction[] | []>([])
     const [redraw, setRedraw] = useState(false)
     const [onionSkin, setOnionSkin] = useState<[frame] | []>([])
+    const [isWriting, setIsWriting] = useState(false)
+    const [characters, setCharacters] = useState('')
+    const [renderText, setRenderText] = useState(false)
     const [clear, setClear] = useState(false)
     const [removedFrame, setRemovedFrame] = useState<frame | null>(null)
     const [isPlay, setIsPlay] = useState(false)
@@ -65,7 +69,9 @@ export default function Home() {
         lineWidth: 6,
         strokeStyle: "#000000",
         eraserWidth: 6,
-        fillMode: false
+        fillMode: false,
+        font: "Arial",
+        fontSize: 50
     })
 
     const [background, setBackground] = useState("white")
@@ -124,6 +130,11 @@ export default function Home() {
     const onDraw = () => {
         if (isPlay || onDownload.on) return
         setAction({ isDraw: true })
+    }
+
+    const onText = () => {
+        if (isPlay || onDownload.on) return
+        setAction({ isText: true })
     }
 
     const onErase = () => {
@@ -260,6 +271,24 @@ export default function Home() {
     const handleKeyboard = (e: KeyboardEvent) => {
 
         if (userMsg?.isDisplay || onDownload.on) return
+
+        if (isWriting) {
+
+            if (e.key === "Backspace") {
+                setCharacters(prev => prev = prev.slice(0, prev.length - 1))
+                return
+            }
+
+            if (e.key === "Enter") {
+                setRenderText(true)
+                return
+            }
+
+            if (e.key.length > 1) return
+            setCharacters(prev => prev + e.key)
+            return
+        }
+
         if (e.key === ' ') setIsPlay(!isPlay)
 
         if (isPlay) return
@@ -314,13 +343,13 @@ export default function Home() {
         }
     }
 
-    const handleBars = (bar: string) => {
-        setTimeout(() => {
-            mobileBars === bar
-                ? setMobileBars('')
-                : setMobileBars(bar)
-        }, 100);
-    }
+    // const handleBars = (bar: string) => {
+    //     setTimeout(() => {
+    //         mobileBars === bar
+    //             ? setMobileBars('')
+    //             : setMobileBars(bar)
+    //     }, 100);
+    // }
 
     const framesButtonClass = "w-6 h-6 cursor-pointer hover:scale-110"
     const actionButtonClass = "relative p-2 md:p-3 rounded-xl cursor-pointer text-black/60 md:text-inherit"
@@ -332,16 +361,20 @@ export default function Home() {
                 userMsg={userMsg}
                 setUserMsg={setUserMsg}
             />}
-            <h1 className={`hidden md:block md:mb-8 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
+            <h1 className={`hidden md:block md:mb-6 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
             <div className="absolute left-10 top-10 p-3 rounded-lg text-white bg-slate-50/20 cursor-pointer" onClick={() => setHotKeys(!hotKeys)}>Hot-Keys</div>
-            <div id="main-flex" className="flex flex-row justify-center md:gap-1 lg:gap-2">
-                <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} />
+            <div id="main-flex" className="flex flex-row w-full max-w-[1120px] mx-auto bg-slate-950">
+                {/* <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} /> */}
                 <div id="action-buttons"
                     className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${mobileBars === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
                             md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-md`}>
                     <div id="pencil" onClick={onDraw} className={`${actionButtonClass} ${action.isDraw ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Pencil />
                         {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">p</p>}
+                    </div>
+                    <div id="text" onClick={onText} className={`${actionButtonClass} ${action.isText ? 'bg-white/60 md:bg-white/20' : ''}`}>
+                        < Type />
+                        {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">t</p>}
                     </div>
                     <div id="erase" onClick={onErase} className={`${actionButtonClass} ${action.isErase ? 'bg-white/60 md:bg-white/20' : ''}`}>
                         <Eraser />
@@ -395,7 +428,7 @@ export default function Home() {
                         {hotKeys && <p className="absolute bottom-0 -right-3 text-sm opacity-50">x</p>}
                     </div>
                 </div>
-                <div id="canvas-container" className="relative w-[100%] md:max-w-[640px] lg:max-w-[840px] bg-slate-950 rounded-md">
+                <div id="canvas-container" className="relative w-full border-x-2 border-x-white/30">
                     {layers.length && layers.map((layer, idx) =>
                         <div key={idx}>
                             <DrawingCanvas
@@ -409,6 +442,12 @@ export default function Home() {
                                 styles={styles}
                                 background={background}
                                 loadImage={loadImage}
+                                isWriting={isWriting}
+                                setIsWriting={setIsWriting}
+                                characters={characters}
+                                setCharacters={setCharacters}
+                                renderText={renderText}
+                                setRenderText={setRenderText}
                                 clear={clear}
                                 isPlay={isPlay}
                                 onDownload={onDownload}
@@ -446,7 +485,7 @@ export default function Home() {
                     loadImage={loadImage}
                     mobileBars={mobileBars}
                 ></Layers>
-                <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} />
+                {/* <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} /> */}
             </div>
             <BottomBar
                 frames={frames}
@@ -474,7 +513,7 @@ export default function Home() {
                 setRemovedFrame={setRemovedFrame}
                 hotKeys={hotKeys}
             ></BottomBar>
-            <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} />
+            {/* <ChevronUp className="md:hidden absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-6 text-black bg-gray-200 rounded-t-2xl z-20" onClick={() => handleBars("frames")} /> */}
         </main>
     )
 }
