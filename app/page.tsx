@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, KeyboardEvent, useMemo } from "react"
+import { useEffect, useState, KeyboardEvent, useMemo, useRef, MouseEventHandler } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
 import DrawingCanvas from "@/components/drawing-canvas"
 import PlayingCanvas from "@/components/playing-canvas"
@@ -38,6 +38,12 @@ const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 export default function Home() {
     const scenes = useLiveQuery(() => db.scenes.toArray())
 
+    const textBox = useRef<HTMLDivElement>(null)
+
+    const [textBoxLocation, setTextBoxLocation] = useState<{ left: number, top: number, offsetX: number, offsetY: number }>({ left: 0, top: 0, offsetX: 0, offsetY: 0 })
+    const [textBoxStart, setTextBoxStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
+    const [textBoxIsMoving, setTextBoxIsMoving] = useState(false)
+
     const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 })
     const [action, setAction] = useState<action>({ isDraw: true })
     const [layers, setLayers] = useState<layer[] | []>([])
@@ -71,7 +77,8 @@ export default function Home() {
         eraserWidth: 6,
         fillMode: false,
         font: "Arial",
-        fontSize: 50
+        fontSize: 50,
+        fontColor: 'black'
     })
 
     const [background, setBackground] = useState("white")
@@ -149,6 +156,7 @@ export default function Home() {
         setLayers([{ id: generateId(), drawingActions: [] }, { id: generateId(), drawingActions: [] }])
         setUndoHistory([])
         setCurrentLayerIdx(1)
+        setAction({ isDraw: true })
         setClear(!clear)
     }
 
@@ -191,6 +199,36 @@ export default function Home() {
             setLayers(prev => [...newLayers])
         }
     }
+
+    // TEXTBOX
+
+    const onTextBoxDown: MouseEventHandler<HTMLDivElement> = (e) => {
+
+        const box = textBox.current?.getBoundingClientRect();
+        if (box) {
+            setTextBoxStart({ x: e.clientX - box.left, y: e.clientY - box.top });
+        }
+
+        setTextBoxIsMoving(true)
+    }
+
+    const onTextBoxMove: MouseEventHandler<HTMLDivElement> = (e) => {
+        e.preventDefault()
+        if (!textBoxIsMoving) return
+
+        const clientX = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
+        const clientY = 'nativeEvent' in e ? e.nativeEvent.clientY : (e as TouchEvent).touches[0].clientY
+        const offsetX = 'nativeEvent' in e ? e.nativeEvent.offsetX : (e as TouchEvent).touches[0].clientX
+        const offsetY = 'nativeEvent' in e ? e.nativeEvent.offsetY : (e as TouchEvent).touches[0].clientY
+
+        setTextBoxLocation({ left: clientX - textBoxStart.x, top: clientY - textBoxStart.y, offsetX, offsetY })
+    }
+
+    const onTextBoxUp: MouseEventHandler<HTMLDivElement> = (e) => {
+        e.preventDefault()
+        setTextBoxIsMoving(false)
+    }
+
 
     // UTILS
 
@@ -364,7 +402,10 @@ export default function Home() {
             <h1 className={`hidden md:block md:mb-6 text-slate-200 text-center text-5xl ${sue_ellen.className}`}>{`Let's Animate!`}</h1>
             <div className="absolute left-10 top-10 p-3 rounded-lg text-white bg-slate-50/20 cursor-pointer" onClick={() => setHotKeys(!hotKeys)}>Hot-Keys</div>
             <div id="main-flex" className="flex flex-row w-full max-w-[1120px] mx-auto bg-slate-950">
-                {/* <ChevronRight className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" onClick={() => handleBars("actions")} /> */}
+                {/* <ChevronRight 
+                className="md:hidden absolute left-0 top-24 -translate-y-1/2 w-8 h-16 p-1 text-black bg-gray-200/80 rounded-r-2xl z-30" 
+                onClick={() => handleBars("actions")}>
+                </ChevronRight> */}
                 <div id="action-buttons"
                     className={`absolute top-32 rounded-r-3xl bg-gray-300/60 ${mobileBars === "actions" ? 'left-0' : '-left-[80px]'} transition-all duration-700 p-2 z-30 
                             md:static md:px-3 lg:px-8 md:py-4 md:bg-slate-950 text-white/70 grid grid-cols-1 grid-rows-10 justify-items-center items-center gap-1 md:rounded-md`}>
@@ -446,6 +487,9 @@ export default function Home() {
                                 setIsWriting={setIsWriting}
                                 characters={characters}
                                 setCharacters={setCharacters}
+                                onTextBoxMove={onTextBoxMove}
+                                textBoxLocation={textBoxLocation}
+                                setTextBoxLocation={setTextBoxLocation}
                                 renderText={renderText}
                                 setRenderText={setRenderText}
                                 clear={clear}
@@ -485,8 +529,33 @@ export default function Home() {
                     loadImage={loadImage}
                     mobileBars={mobileBars}
                 ></Layers>
-                {/* <ChevronLeft className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" onClick={() => handleBars("layers")} /> */}
+                
+                {/* <ChevronLeft 
+                className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" 
+                onClick={() => handleBars("layers")} >
+
+                </ChevronLeft> */}
             </div>
+            {isWriting && <div ref={textBox}
+                onMouseDown={onTextBoxDown}
+                onMouseUp={onTextBoxUp}
+                style={{
+                    position: 'fixed',
+                    backgroundColor: 'rgba(255,255,255,.4)',
+                    color: styles.fontColor,
+                    border: "1px black solid",
+                    borderRadius: "5px",
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    left: textBoxLocation.left,
+                    top: textBoxLocation.top,
+                    font: styles.font,
+                    fontSize: styles.fontSize,
+                    height: styles.fontSize
+                }}>
+                {characters}
+            </div>}
             <BottomBar
                 frames={frames}
                 setFrames={setFrames}

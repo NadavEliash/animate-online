@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { styles } from "@/app/models"
-import { CaseSensitive, Eraser, Pencil, Text, Type, X } from "lucide-react"
+import { CaseSensitive, Eraser, Pencil, PenIcon, Text, Type, X } from "lucide-react"
 import { Sketch } from "@uiw/react-color"
 import { Sue_Ellen_Francisco } from "next/font/google"
 
@@ -26,7 +26,9 @@ export default function Styles({
     const [eraserWidth, setEraserWidth] = useState<number>(styles.eraserWidth)
     const [font, setFont] = useState<string>(styles.font)
     const [fontSize, setFontSize] = useState<number>(styles.fontSize)
+    const [fontColor, setFontColor] = useState(styles.fontColor)
     const [animation, setAnimation] = useState<string>('scale-x-0')
+    const [drawingColor, setDrawingColor] = useState(true)
 
     useEffect(() => {
         setTimeout(() => {
@@ -48,7 +50,15 @@ export default function Styles({
                 <h1 className={`${sue_ellen.className} text-[2rem] text-slate-300 tracking-wider my-2 text-center`}>Styles</h1>
                 <div className="flex p-4 gap-8">
                     <div>
-                        <Sketch color={strokeStyle} onChange={(e) => handleChanges('strokeStyle', e.hex)} />
+                        <div className="relative w-20 flex items-center justify-between p-2 mb-3 cursor-pointer" onClick={() => setDrawingColor(prev => !prev)}>
+                            <div className={`absolute bg-white/30 w-10 h-10 rounded-xl ${drawingColor ? 'left-0' : 'right-0'}`}></div>
+                            <PenIcon />
+                            <Type />
+                        </div>
+                        {drawingColor
+                            ? <Sketch color={strokeStyle} onChange={(e) => handleChanges('strokeStyle', e.hex)} />
+                            : <Sketch color={fontColor} onChange={(e) => handleChanges('fontColor', e.hex)} />
+                        }
                     </div>
                     <div className="flex flex-col gap-6 w-[20vw]">
                         <div>
@@ -65,7 +75,7 @@ export default function Styles({
                         <div>
                             <div className="flex gap-4">
                                 <Eraser />
-                                {eraserWidth/3}
+                                {eraserWidth / 3}
                             </div>
                             <input type="range" min="3" max="21" step={3} defaultValue={eraserWidth} className="h-1 w-full" onChange={(e) => { handleChanges('eraserWidth', e.target.valueAsNumber), setEraserWidth(e.target.valueAsNumber) }} />
                         </div>
@@ -80,7 +90,7 @@ export default function Styles({
                                 <CaseSensitive />
                                 {fontSize}px
                             </div>
-                            <input type="range" min="10" max="100" step={10} defaultValue={fontSize} className="h-1 w-full" onChange={(e) => { handleChanges('fontSize', e.target.valueAsNumber), setFontSize(e.target.valueAsNumber) }} />
+                            <input type="range" min="30" max="100" step={10} defaultValue={fontSize} className="h-1 w-full" onChange={(e) => { handleChanges('fontSize', e.target.valueAsNumber), setFontSize(e.target.valueAsNumber) }} />
                         </div>
                     </div>
                 </div>

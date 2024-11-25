@@ -18,6 +18,9 @@ interface DrawingCanvasProps {
     setIsWriting: Function
     characters: string
     setCharacters: Function
+    onTextBoxMove: Function
+    textBoxLocation: { left: number, top: number, offsetX: number, offsetY: number }
+    setTextBoxLocation: Function
     renderText: boolean
     setRenderText: Function
     clear: boolean
@@ -41,6 +44,9 @@ export default function DrawingCanvas({
     setIsWriting,
     characters,
     setCharacters,
+    onTextBoxMove,
+    textBoxLocation,
+    setTextBoxLocation,
     renderText,
     setRenderText,
     clear,
@@ -49,40 +55,28 @@ export default function DrawingCanvas({
     redraw
 }: DrawingCanvasProps) {
 
+
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const textBox = useRef<HTMLDivElement>(null)
 
     const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
     const [currentPath, setCurrentPath] = useState<path[] | []>([])
     const [currentURL, setCurrentURL] = useState('')
     const [isDrawing, setIsDrawing] = useState(false)
     const [textLocation, setTextLocation] = useState({ x: 0, y: 0 })
-    const [textBoxLocation, setTextBoxLocation] = useState<{ left: number, top: number, offsetX: number, offsetY: number }>({ left: 0, top: 0, offsetX: 0, offsetY: 0 })
-    const [textBoxStart, setTextBoxStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 })
-    const [textBoxIsMoving, setTextBoxIsMoving] = useState(false)
     const [isTransform, setIsTransform] = useState(false)
     const [transformGap, setTransformGap] = useState({ x: 0, y: 0 })
     const [drawingActions, setDrawingActions] = useState<drawingAction[] | []>([])
 
     useEffect(() => {
         if (canvasRef.current) {
-            const canvas = canvasRef.current
+            const canvas = canvasRef.current;
 
-            canvas.width = canvasSize.width
-            canvas.height = canvasSize.height
-            const ctx = canvas.getContext('2d')
-            setContext(ctx)
+            canvas.width = canvasSize.width;
+            canvas.height = canvasSize.height;
+            const ctx = canvas.getContext('2d');
+            setContext(ctx);
 
             redrawImage(layer.drawingActions)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (canvasRef.current) {
-            const canvas = canvasRef.current
-            canvas.addEventListener('touchstart', (e) => onDown(e), { passive: false })
-            canvas.addEventListener('touchmove', (e) => onMove(e), { passive: false })
-            canvas.addEventListener('touchend', (e) => onUp(e), { passive: false })
         }
     }, [])
 
@@ -98,12 +92,14 @@ export default function DrawingCanvas({
     }, [drawingActions])
 
     useEffect(() => {
-        if (context) {
+        if (context && idx === currentLayerIdx) {
             context.font = `${styles.fontSize}px ${styles.font}`
-            context.fillText(characters, textBoxLocation.offsetX, textBoxLocation.offsetY+(styles.fontSize/2))
+            context.fillStyle = styles.fontColor
+            context.fillText(characters, textBoxLocation.offsetX, textBoxLocation.offsetY)
             setCharacters('')
             setRenderText(false)
             setIsWriting(false)
+
             canvasRef.current?.toBlob((blob) => {
                 const url = URL.createObjectURL(blob!)
                 if (url) setDrawingActions([{ url, isPath: false }, ...drawingActions])
@@ -125,18 +121,6 @@ export default function DrawingCanvas({
             redrawImage(layer?.drawingActions)
         }
     }, [redraw])
-
-    useEffect(() => {
-        if (!isWriting) return
-
-        if (textBox.current) {
-            textBox.current.innerHTML = characters
-        }
-        // if (context) {
-        //     context.font = "48px serif";
-        //     context.fillText(characters, textLocation.x, textLocation.y)
-        // }
-    }, [characters])
 
     useEffect(() => {
         if (!action.isText) {
@@ -186,38 +170,6 @@ export default function DrawingCanvas({
         if (action.isTranslate || action.isRotate || action.isScale) endTransform(e)
     }
 
-    // TextBox Move
-
-    const onTextBoxDown = (e: MouseEvent | TouchEvent) => {
-        e.preventDefault()
-
-        const clientX = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
-        const clientY = 'nativeEvent' in e ? e.nativeEvent.clientY : (e as TouchEvent).touches[0].clientY
-
-        const box = textBox.current?.getBoundingClientRect();
-        if (box) {
-            setTextBoxStart({ x: clientX - box.left, y: clientY - box.top });
-        }
-
-        setTextBoxIsMoving(true)
-    }
-
-    const onTextBoxMove = (e: MouseEvent | TouchEvent) => {
-        e.preventDefault()
-        if (!textBoxIsMoving) return
-
-        const clientX = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
-        const clientY = 'nativeEvent' in e ? e.nativeEvent.clientY : (e as TouchEvent).touches[0].clientY
-        const offsetX = 'nativeEvent' in e ? e.nativeEvent.offsetX : (e as TouchEvent).touches[0].clientX
-        const offsetY = 'nativeEvent' in e ? e.nativeEvent.offsetY : (e as TouchEvent).touches[0].clientY
-
-        setTextBoxLocation({ left: clientX - textBoxStart.x, top: clientY - textBoxStart.y, offsetX, offsetY })
-    }
-
-    const onTextBoxUp = (e: MouseEvent | TouchEvent) => {
-        e.preventDefault()
-        setTextBoxIsMoving(false)
-    }
 
     // ACTIONS
 
@@ -278,23 +230,20 @@ export default function DrawingCanvas({
     }
 
     const startWriting = (e: MouseEvent | TouchEvent) => {
-        if (isPlay || onDownload.on) return
+        if (isPlay || onDownload.on || currentLayerIdx !== idx) return
+
         if (canvasRef.current && action.isText) {
             const ctx = canvasRef.current.getContext('2d')
             if (ctx) {
-                setIsWriting(true)
                 setCharacters('')
 
                 const left = 'nativeEvent' in e ? e.nativeEvent.clientX : (e as TouchEvent).touches[0].clientX
-                const top = 'nativeEvent' in e ? e.nativeEvent.clientY - 20 : (e as TouchEvent).touches[0].clientY
+                const top = 'nativeEvent' in e ? e.nativeEvent.clientY - styles.fontSize : (e as TouchEvent).touches[0].clientY
                 const offsetX = 'nativeEvent' in e ? e.nativeEvent.offsetX : (e as TouchEvent).touches[0].clientX
                 const offsetY = 'nativeEvent' in e ? e.nativeEvent.offsetY : (e as TouchEvent).touches[0].clientY
 
                 setTextBoxLocation({ left, top, offsetX, offsetY })
-
-
-                // ctx.fillRect(x, y - 30, 3, 50)
-                // setWritingLocation({ x, y: y + 5 })
+                setIsWriting(true)
             }
         }
     }
@@ -649,13 +598,6 @@ export default function DrawingCanvas({
                 width={canvasSize.width}
                 height={canvasSize.height}>
             </canvas>
-
-            {isWriting &&
-                <div ref={textBox}
-                    onMouseDown={onTextBoxDown}
-                    onMouseUp={onTextBoxUp}
-                    className={`fixed bg-white/40 border-[1px] border-black rounded-lg flex items-center px-2 cursor-pointer`}
-                    style={{ left: textBoxLocation.left, top: textBoxLocation.top, font: styles.font, fontSize: styles.fontSize, height: styles.fontSize }}></div>}
         </>
     )
 }

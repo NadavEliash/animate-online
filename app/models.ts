@@ -59,6 +59,7 @@ export interface styles {
     fillMode: boolean
     font: string
     fontSize: number
+    fontColor: string
 }
 
 export interface userMsg {
