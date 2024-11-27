@@ -13,10 +13,7 @@ import UserMsg from "@/components/user-msg"
 import { action, drawingAction, frame, frameToSave, layer, onDownload, styles, userMsg } from "./models"
 import { Amatic_SC, Fredoka, Rubik, Sue_Ellen_Francisco } from "next/font/google"
 
-export const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
-export const amatic = Amatic_SC({ subsets: ['latin', 'hebrew'], weight: '400' })
-export const rubik = Rubik({ subsets: ['latin', 'hebrew'], weight: '400' })
-export const fredoka = Fredoka({ subsets: ['latin', 'hebrew'], weight: '400' })
+const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 import {
     Eraser,
