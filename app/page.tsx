@@ -12,9 +12,6 @@ import Backgrounds from "@/components/backgrounds"
 import UserMsg from "@/components/user-msg"
 import { action, drawingAction, frame, frameToSave, layer, onDownload, styles, userMsg } from "./models"
 import { Amatic_SC, Fredoka, Rubik, Sue_Ellen_Francisco } from "next/font/google"
-
-const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
-
 import {
     Eraser,
     Pencil,
@@ -33,6 +30,7 @@ import {
 import { db, Scene } from "./db/db.model"
 import { base64ToUrl, generateId, urlToBase64 } from "./lib/util"
 
+const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 export default function Home() {
     const scenes = useLiveQuery(() => db.scenes.toArray())
