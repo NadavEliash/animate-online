@@ -30,9 +30,9 @@ import {
 import { db, Scene } from "./db/db.model"
 import { base64ToUrl, generateId, urlToBase64 } from "./lib/util"
 
+const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 export default function Home() {
-    const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
     const scenes = useLiveQuery(() => db.scenes.toArray())
 
     const textBox = useRef<HTMLDivElement>(null)
