@@ -11,7 +11,7 @@ import Styles from "@/components/styles"
 import Backgrounds from "@/components/backgrounds"
 import UserMsg from "@/components/user-msg"
 import { action, drawingAction, frame, frameToSave, layer, onDownload, styles, userMsg } from "./models"
-import { Amatic_SC, Fredoka, Rubik, Sue_Ellen_Francisco } from "next/font/google"
+import { Sue_Ellen_Francisco } from "next/font/google"
 import {
     Eraser,
     Pencil,

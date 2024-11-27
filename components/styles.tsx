@@ -2,8 +2,8 @@ import { useEffect, useState } from "react"
 import { styles } from "@/app/models"
 import { CaseSensitive, Eraser, Pencil, PenIcon, Text, Type, X } from "lucide-react"
 import { Sketch } from "@uiw/react-color"
-import { amatic, fredoka, rubik, sue_ellen } from "@/app/page"
 import { NextFont } from "next/dist/compiled/@next/font"
+import { Sue_Ellen_Francisco } from "next/font/google"
 
 interface StyleProps {
     styleBar: boolean
@@ -13,6 +13,8 @@ interface StyleProps {
     font: string
     setFont: Function
 }
+
+const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 export default function Styles({
     styleBar,
