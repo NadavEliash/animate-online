@@ -11,8 +11,12 @@ import Styles from "@/components/styles"
 import Backgrounds from "@/components/backgrounds"
 import UserMsg from "@/components/user-msg"
 import { action, drawingAction, frame, frameToSave, layer, onDownload, styles, userMsg } from "./models"
+import { Amatic_SC, Fredoka, Rubik, Sue_Ellen_Francisco } from "next/font/google"
 
-import { Sue_Ellen_Francisco } from 'next/font/google'
+export const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
+export const amatic = Amatic_SC({ subsets: ['latin', 'hebrew'], weight: '400' })
+export const rubik = Rubik({ subsets: ['latin', 'hebrew'], weight: '400' })
+export const fredoka = Fredoka({ subsets: ['latin', 'hebrew'], weight: '400' })
 
 import {
     Eraser,
@@ -32,8 +36,6 @@ import {
 import { db, Scene } from "./db/db.model"
 import { base64ToUrl, generateId, urlToBase64 } from "./lib/util"
 
-
-const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
 
 export default function Home() {
     const scenes = useLiveQuery(() => db.scenes.toArray())
@@ -56,6 +58,7 @@ export default function Home() {
     const [onionSkin, setOnionSkin] = useState<[frame] | []>([])
     const [isWriting, setIsWriting] = useState(false)
     const [characters, setCharacters] = useState('')
+    const [font, setFont] = useState('')
     const [renderText, setRenderText] = useState(false)
     const [clear, setClear] = useState(false)
     const [removedFrame, setRemovedFrame] = useState<frame | null>(null)
@@ -76,7 +79,7 @@ export default function Home() {
         strokeStyle: "#000000",
         eraserWidth: 6,
         fillMode: false,
-        font: "Arial",
+        font: 'arial',
         fontSize: 50,
         fontColor: 'black'
     })
@@ -431,6 +434,8 @@ export default function Home() {
                             setStyleBar={setStyleBar}
                             styles={styles}
                             setStyles={setStyles}
+                            font={font}
+                            setFont={setFont}
                         />}
                     </div>
                     {bgBar && <div className="absolute left-0 top-0 w-[100vw] h-[100vh] bg-slate-300/10 z-20" onClick={() => setBgBar(false)}></div>}
@@ -529,7 +534,7 @@ export default function Home() {
                     loadImage={loadImage}
                     mobileBars={mobileBars}
                 ></Layers>
-                
+
                 {/* <ChevronLeft 
                 className="md:hidden absolute right-0 top-1/3 -translate-y-1/2 w-6 h-20 text-black bg-gray-200 rounded-l-2xl z-20" 
                 onClick={() => handleBars("layers")} >
@@ -550,7 +555,7 @@ export default function Home() {
                     cursor: "pointer",
                     left: textBoxLocation.left,
                     top: textBoxLocation.top,
-                    font: styles.font,
+                    font: 'arial',
                     fontSize: styles.fontSize,
                     height: styles.fontSize
                 }}>

@@ -2,29 +2,31 @@ import { useEffect, useState } from "react"
 import { styles } from "@/app/models"
 import { CaseSensitive, Eraser, Pencil, PenIcon, Text, Type, X } from "lucide-react"
 import { Sketch } from "@uiw/react-color"
-import { Sue_Ellen_Francisco } from "next/font/google"
-
-const sue_ellen = Sue_Ellen_Francisco({ subsets: ['latin'], weight: '400' })
+import { amatic, fredoka, rubik, sue_ellen } from "@/app/page"
+import { NextFont } from "next/dist/compiled/@next/font"
 
 interface StyleProps {
     styleBar: boolean
     setStyleBar: Function
     styles: styles
     setStyles: Function
+    font: string
+    setFont: Function
 }
 
 export default function Styles({
     styleBar,
     setStyleBar,
     styles,
-    setStyles
+    setStyles,
+    font,
+    setFont
 }: StyleProps) {
 
     const [strokeStyle, setStrokeStyle] = useState(styles.strokeStyle)
     const [lineWidth, setLineWidth] = useState<number>(styles.lineWidth)
     const [fillMode, setFillMode] = useState<boolean>(styles.fillMode)
     const [eraserWidth, setEraserWidth] = useState<number>(styles.eraserWidth)
-    const [font, setFont] = useState<string>(styles.font)
     const [fontSize, setFontSize] = useState<number>(styles.fontSize)
     const [fontColor, setFontColor] = useState(styles.fontColor)
     const [animation, setAnimation] = useState<string>('scale-x-0')
@@ -80,9 +82,8 @@ export default function Styles({
                             <input type="range" min="3" max="21" step={3} defaultValue={eraserWidth} className="h-1 w-full" onChange={(e) => { handleChanges('eraserWidth', e.target.valueAsNumber), setEraserWidth(e.target.valueAsNumber) }} />
                         </div>
                         <div>
-                            <div className="flex gap-4">
+                            <div className="flex items-center gap-4">
                                 <Type />
-                                {font}
                             </div>
                         </div>
                         <div>

@@ -67,6 +67,7 @@ export default function DrawingCanvas({
     const [transformGap, setTransformGap] = useState({ x: 0, y: 0 })
     const [drawingActions, setDrawingActions] = useState<drawingAction[] | []>([])
 
+
     useEffect(() => {
         if (canvasRef.current) {
             const canvas = canvasRef.current;
@@ -93,7 +94,7 @@ export default function DrawingCanvas({
 
     useEffect(() => {
         if (context && idx === currentLayerIdx) {
-            context.font = `${styles.fontSize}px ${styles.font}`
+            context.font = `${styles.fontSize}px Arial`
             context.fillStyle = styles.fontColor
             context.fillText(characters, textBoxLocation.offsetX, textBoxLocation.offsetY)
             setCharacters('')
